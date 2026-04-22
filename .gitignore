@@ -1,0 +1,32 @@
+# ── Rust build artifacts ──────────────────────────────────────────────────────
+/target/
+/backend/target/
+/frontend/target/
+
+# Cargo.lock is intentionally committed for binaries (backend).
+# For pure libraries it's typically gitignored, but since this workspace
+# contains a binary crate, keeping it is the right call.
+
+# ── Trunk / WASM build output ─────────────────────────────────────────────────
+/frontend/dist/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+# Never commit real credentials. Copy .env.example → .env and fill in values.
+.env
+backend/.env
+
+# ── OS cruft ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.log
