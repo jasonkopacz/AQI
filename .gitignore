@@ -3,10 +3,7 @@
 /backend/target/
 /frontend/target/
 
-# Cargo.lock is intentionally committed for binaries (backend).
-# For pure libraries it's typically gitignored, but since this workspace
-# contains a binary crate, keeping it is the right call.
-
+Cargo.lock
 # ── Trunk / WASM build output ─────────────────────────────────────────────────
 /frontend/dist/
 
