@@ -128,7 +128,7 @@ fn App() -> impl IntoView {
             <header class="header">
                 <div class="header__brand">
                     <span class="header__logo">"🌍"</span>
-                    <span class="header__title">"AirWatch"</span>
+                    <span class="header__title">"AQI"</span>
                     <span class="header__tagline">"Global Air Quality"</span>
                 </div>
 

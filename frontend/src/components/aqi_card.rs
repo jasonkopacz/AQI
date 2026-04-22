@@ -62,7 +62,7 @@ fn AqiScale(current: Option<u32>) -> impl IntoView {
     let segments = [
         ("Good",       "aqi-good",          50u32),
         ("Moderate",   "aqi-moderate",      100),
-        ("USG",        "aqi-sensitive",     150),
+        ("Sensitive",        "aqi-sensitive",     150),
         ("Unhealthy",  "aqi-unhealthy",     200),
         ("Very",       "aqi-very-unhealthy",300),
         ("Hazardous",  "aqi-hazardous",     500),

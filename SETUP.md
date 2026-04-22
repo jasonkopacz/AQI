@@ -1,4 +1,4 @@
-# AirWatch — Setup Guide
+# AQI — Setup Guide
 
 ## Prerequisites
 
