@@ -1,0 +1,1 @@
+cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/Users/jasonkopacz/air-quality-app/target/debug/build/mime_guess-3d4bcaefacdd413a/out/mime_types_generated.rs

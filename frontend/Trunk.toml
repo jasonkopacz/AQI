@@ -1,0 +1,10 @@
+[build]
+target = "index.html"
+# Output directory for the built assets (backend serves from here in production).
+dist = "dist"
+
+# During development, proxy all /api requests to the Axum backend so we can
+# run `trunk serve` and `cargo run` in the backend simultaneously without CORS.
+[[proxy]]
+rewrite = "/api"
+backend = "http://localhost:3000/api"
