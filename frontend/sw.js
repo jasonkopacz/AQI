@@ -5,11 +5,32 @@
 
 const SHELL_CACHE = 'aqi-shell-v1';
 const DATA_CACHE  = 'aqi-data-v1';
+const DEBUG = true;
 
 const SHELL_URLS = ['/', '/index.html'];
 
+function log(...args) {
+  if (DEBUG) {
+    console.log('[sw]', ...args);
+  }
+}
+
+function cacheResponse(cacheName, request, response) {
+  if (!response || !response.ok) {
+    return;
+  }
+
+  try {
+    const responseClone = response.clone();
+    caches.open(cacheName).then(cache => cache.put(request, responseClone)).catch(() => {});
+  } catch (_) {
+    log('Skipping cache write due to non-cloneable response', request.url);
+  }
+}
+
 // ── Install: pre-cache the app shell ─────────────────────────────────────────
 self.addEventListener('install', event => {
+  log('Installing service worker');
   event.waitUntil(
     caches.open(SHELL_CACHE).then(cache => cache.addAll(SHELL_URLS))
   );
@@ -18,6 +39,7 @@ self.addEventListener('install', event => {
 
 // ── Activate: clean up old caches ────────────────────────────────────────────
 self.addEventListener('activate', event => {
+  log('Activating service worker');
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
@@ -43,13 +65,14 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(DATA_CACHE).then(cache => cache.put(request, clone));
-          }
+          cacheResponse(DATA_CACHE, request, response);
+          log('API network response', request.url, response.status);
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() => {
+          log('API network failed, falling back to cache', request.url);
+          return caches.match(request);
+        })
     );
     return;
   }
@@ -60,16 +83,12 @@ self.addEventListener('fetch', event => {
       if (cached) {
         // Refresh in background
         fetch(request).then(response => {
-          if (response.ok) {
-            caches.open(SHELL_CACHE).then(cache => cache.put(request, response));
-          }
+          cacheResponse(SHELL_CACHE, request, response);
         }).catch(() => {});
         return cached;
       }
       return fetch(request).then(response => {
-        if (response.ok) {
-          caches.open(SHELL_CACHE).then(cache => cache.put(request, response.clone()));
-        }
+        cacheResponse(SHELL_CACHE, request, response);
         return response;
       });
     })

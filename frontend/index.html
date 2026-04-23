@@ -7,6 +7,9 @@
     <meta name="description" content="Real-time air quality index for any city in the world." />
     <meta name="theme-color" content="#0f1117" />
 
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+
     <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json" />
 
@@ -16,10 +19,17 @@
     <meta name="apple-mobile-web-app-title" content="AQI" />
 
     <!-- Trunk injects the compiled WASM + JS glue here automatically -->
-    <link data-trunk rel="css" href="style.css" />
+    <link data-trunk rel="css" href="src/app.css" />
+    <link data-trunk rel="css" href="src/components/favorites.css" />
+    <link data-trunk rel="css" href="src/components/search.css" />
+    <link data-trunk rel="css" href="src/components/aqi_card.css" />
+    <link data-trunk rel="css" href="src/components/forecast.css" />
+    <link data-trunk rel="css" href="src/components/pollutants.css" />
+    <link data-trunk rel="css" href="src/app_responsive.css" />
     <!-- Copy manifest and service worker into dist unchanged -->
     <link data-trunk rel="copy-file" href="manifest.json" />
     <link data-trunk rel="copy-file" href="sw.js" />
+    <link data-trunk rel="copy-dir" href="icons" />
 
     <link
       rel="stylesheet"

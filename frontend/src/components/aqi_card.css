@@ -1,0 +1,434 @@
+/* ---------- AQI Card ---------- */
+.aqi-card {
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: var(--shadow);
+  transition: background var(--transition);
+}
+
+.aqi-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.aqi-card__header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Share button on the AQI card */
+.btn-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.1);
+  color: inherit;
+  font-size: 0.8rem;
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+.btn-share:hover { background: rgba(0,0,0,0.2); }
+
+/* Save / unsave toggle button on the AQI card */
+.btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.1);
+  color: inherit;
+  font-size: 0.8rem;
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), opacity var(--transition);
+  white-space: nowrap;
+}
+.btn-save:hover { background: rgba(0,0,0,0.2); }
+.btn-save--saved { background: rgba(0,0,0,0.18); opacity: 0.85; }
+
+.aqi-card__city {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.aqi-card__timestamp {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.aqi-card__body {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.aqi-card__section {
+  background: var(--aqi-section-bg);
+  border: 1px solid var(--aqi-section-border);
+  border-radius: var(--radius-sm);
+  color: var(--aqi-section-fg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(2px);
+}
+
+.aqi-card__section .aqi-card__category,
+.aqi-card__section .aqi-card__dominant,
+.aqi-card__section .aqi-card__advice,
+.aqi-card__section .sparkline__title,
+.aqi-card__section .sparkline__day-label,
+.aqi-card__section .sparkline__val-label,
+.aqi-card__section .health-advisory__label,
+.aqi-card__section .health-advisory__tip {
+  color: var(--aqi-section-fg);
+}
+
+.aqi-card__section .aqi-card__dominant,
+.aqi-card__section .aqi-card__advice,
+.aqi-card__section .sparkline__title,
+.aqi-card__section .sparkline__day-label,
+.aqi-card__section .health-advisory__label,
+.aqi-card__section .health-advisory__tip {
+  opacity: 1;
+}
+
+.aqi-card__section .aqi-card__category {
+  font-weight: 700;
+}
+
+.aqi-card__section .sparkline__line,
+.aqi-card__section .sparkline__dot,
+.aqi-card__section .sparkline__day-label,
+.aqi-card__section .sparkline__val-label {
+  opacity: 0.95;
+}
+
+.aqi-card__section .health-advisory__group-pill {
+  background: var(--aqi-section-pill-bg);
+  border-color: var(--aqi-section-pill-border);
+  color: var(--aqi-section-fg);
+}
+
+.aqi-card__section--gauge {
+  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aqi-card__section--info {
+  flex: 1;
+  min-width: 220px;
+  padding: 1.05rem 1.15rem;
+}
+
+.aqi-card__section--sparkline {
+  padding: 1rem 1rem 0.95rem;
+  margin-bottom: 1.25rem;
+}
+
+.aqi-card__section--scale {
+  padding: 0.95rem 0.75rem 0.85rem;
+}
+
+/* The large AQI circle */
+.aqi-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 130px;
+  height: 130px;
+  flex-shrink: 0;
+}
+
+.aqi-gauge__value {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aqi-gauge__label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+  margin-top: 0.2rem;
+}
+
+.aqi-card__info { min-width: 180px; }
+
+.aqi-card__category {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.aqi-card__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.aqi-card__dominant {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+
+.aqi-card__advice {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+/* ---------- Health advisory ---------- */
+.health-advisory {
+  background: var(--aqi-section-bg);
+  border: 1px solid var(--aqi-section-border);
+  color: var(--aqi-section-fg);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(2px);
+}
+
+.health-advisory__groups-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.health-advisory__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 1;
+  color: var(--aqi-section-fg);
+  white-space: nowrap;
+  padding-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.health-advisory__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.health-advisory__group-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--aqi-section-pill-bg);
+  border: 1px solid var(--aqi-section-pill-border);
+  color: var(--aqi-section-fg);
+  white-space: nowrap;
+}
+
+.health-advisory__tips {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0;
+  margin: 0;
+}
+
+.health-advisory__tip {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  opacity: 1;
+  color: var(--aqi-section-fg);
+}
+
+.health-advisory__tip::before {
+  content: "→";
+  font-weight: 700;
+  flex-shrink: 0;
+  opacity: 0.85;
+  color: var(--aqi-section-fg);
+}
+
+/* ---------- Sparkline ---------- */
+.sparkline {
+  margin-bottom: 0;
+}
+
+.sparkline__title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  margin-bottom: 0.4rem;
+}
+
+.sparkline__svg {
+  width: 100%;
+  height: 96px;
+  display: block;
+  overflow: visible;
+}
+
+.sparkline__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.sparkline__dot {
+  fill: currentColor;
+  opacity: 0.6;
+}
+
+.sparkline__dot--today {
+  opacity: 1;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: rgba(0,0,0,0.2);
+}
+
+.sparkline__day-label {
+  font-size: 9px;
+  fill: currentColor;
+  opacity: 0.55;
+  font-family: var(--font);
+}
+
+.sparkline__day-label--today {
+  opacity: 1;
+  font-weight: 700;
+}
+
+/* Value labels hidden by default, shown on SVG hover */
+.sparkline__val-label {
+  font-size: 9px;
+  fill: currentColor;
+  opacity: 0;
+  font-family: var(--font);
+  font-weight: 600;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.sparkline__svg:hover .sparkline__val-label {
+  opacity: 0.85;
+}
+
+/* ---------- AQI scale bar ---------- */
+.aqi-scale {
+  display: flex;
+  gap: 3px;
+  height: 62px;
+  align-items: flex-end;
+}
+
+.aqi-scale__segment {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 6px;
+  opacity: 0.38;
+  height: 42px;
+  position: relative;
+  transition: opacity 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+  padding: 4px 3px;
+  /* Depth: inner highlight on top edge */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.15);
+}
+
+.aqi-scale__segment.active {
+  opacity: 1;
+  height: 42px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 4px 12px rgba(0,0,0,0.25);
+  outline: 2px solid rgba(255,255,255,0.45);
+  outline-offset: -2px;
+}
+
+/* Downward-pointing triangle indicator on the active segment */
+.aqi-scale__segment.active::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: currentColor;
+  opacity: 0.6;
+  margin-top: 1px;
+}
+
+.aqi-scale__segment.aqi-good           { background: var(--color-good);          color: #fff; }
+.aqi-scale__segment.aqi-moderate       { background: var(--color-moderate);      color: #fff; }
+.aqi-scale__segment.aqi-sensitive      { background: var(--color-sensitive);     color: #fff; }
+.aqi-scale__segment.aqi-unhealthy      { background: var(--color-unhealthy);     color: #fff; }
+.aqi-scale__segment.aqi-very-unhealthy { background: var(--color-very-unhealthy);color: #fff; }
+.aqi-scale__segment.aqi-hazardous      { background: var(--color-hazardous);     color: #fff; }
+
+.aqi-scale__label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.aqi-scale__range {
+  font-size: 0.56rem;
+  font-weight: 600;
+  opacity: 0.8;
+  letter-spacing: 0;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Range hidden on inactive, visible on active + hover */
+.aqi-scale__segment:not(.active) .aqi-scale__range { display: none; }
+.aqi-scale__segment:hover .aqi-scale__range         { display: block; }
+.aqi-scale__segment:hover                            { opacity: 0.75; }

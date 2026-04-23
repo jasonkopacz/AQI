@@ -1,0 +1,91 @@
+/* ---------- Favorites dropdown ---------- */
+.fav-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.fav-dropdown__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition), border-color var(--transition);
+}
+.fav-dropdown__toggle:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.fav-dropdown__chevron {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.fav-dropdown__chevron--open {
+  transform: rotate(180deg);
+}
+
+.fav-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  list-style: none;
+  overflow: hidden;
+  z-index: 200;
+}
+
+.fav-dropdown__item {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.fav-dropdown__item:last-child { border-bottom: none; }
+
+.fav-dropdown__item-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-family: var(--font);
+  padding: 0.65rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: background var(--transition);
+}
+.fav-dropdown__item-name svg { flex-shrink: 0; color: var(--text-muted); }
+.fav-dropdown__item-name:hover { background: var(--surface-2); }
+
+.fav-dropdown__item-remove {
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
+}
+.fav-dropdown__item-remove:hover { background: #ff6b6b22; color: #ff6b6b; }

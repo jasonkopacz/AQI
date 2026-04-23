@@ -1,0 +1,207 @@
+
+/* ---------- Pollutants grid ---------- */
+.pollutants__header {
+  margin-bottom: 1rem;
+}
+
+.btn-unit-toggle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.btn-unit-toggle:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.pollutants {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.pollutants__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0;
+}
+
+.pollutants__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pollutant-tile {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: default;
+  transition: border-color var(--transition);
+}
+.pollutant-tile:hover,
+.pollutant-tile:focus { border-color: var(--accent); outline: none; }
+
+.pollutant-tile__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.pollutant-tile__name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pollutant-tile__info-icon {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  cursor: help;
+  transition: opacity var(--transition);
+}
+.pollutant-tile:hover .pollutant-tile__info-icon { opacity: 1; color: var(--accent); }
+
+/* Tooltip popup */
+.pollutant-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text);
+  width: 240px;
+  box-shadow: var(--shadow);
+  z-index: 300;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.pollutant-tooltip--visible {
+  opacity: 1;
+}
+
+/* Small triangle pointing down */
+.pollutant-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--border);
+}
+
+.pollutant-tile__value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.pollutant-tile__unit {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.pollutant-tile__desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* ---------- Weather row ---------- */
+.weather-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.weather-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+}
+
+/* Temperature tile is a <button> — reset browser defaults, keep tile look */
+.weather-tile--temp {
+  /* Button reset */
+  font-family: var(--font);
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+  /* Keep tile sizing identical to sibling .weather-tile divs */
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color var(--transition), background var(--transition);
+}
+.weather-tile--temp:hover {
+  border-color: var(--accent);
+}
+
+/* Small badge showing the unit you'd switch TO */
+.temp-unit-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 0 0.3rem;
+  line-height: 1.5;
+  opacity: 0.8;
+  margin-left: 0.15rem;
+  flex-shrink: 0;
+}
+
+.weather-tile__icon { font-size: 1rem; }
+
+.weather-tile__label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.weather-tile__value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}

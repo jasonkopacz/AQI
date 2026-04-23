@@ -288,4 +288,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(test)]
-mod testing;
+mod test;

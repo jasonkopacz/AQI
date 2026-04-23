@@ -1,6 +1,9 @@
 mod api;
 mod components;
 
+#[cfg(test)]
+mod test;
+
 use api::{fetch_aqi_by_geo, AqiData};
 use components::{
     load_favorites, persist_favorites, AqiCard, FavoriteLocation, FavoritesBar, ForecastPanel,
@@ -147,9 +150,13 @@ fn App() -> impl IntoView {
         <div class=move || if is_light.get() { "app theme-light" } else { "app" }>
             <header class="header">
                 <div class="header__brand">
-                    <span class="header__logo">"🌍"</span>
-                    <span class="header__title">"AQI"</span>
-                    <span class="header__tagline">"Global Air Quality"</span>
+                    <img
+                        class="header__brand-logo"
+                        src="/icons/logo-brand.png"
+                        alt="AQI — Air Quality Info"
+                        width="620"
+                        height="488"
+                    />
                 </div>
 
                 <div class="header__controls">
