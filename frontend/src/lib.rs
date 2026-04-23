@@ -2,7 +2,11 @@ mod api;
 mod components;
 
 use api::{AqiData, fetch_aqi_by_geo};
-use components::{AqiCard, PollutantsGrid, SearchBar};
+use components::{
+    AqiCard, FavoritesBar, FavoriteLocation, ForecastPanel,
+    load_favorites, persist_favorites,
+    PollutantsGrid, SearchBar,
+};
 use leptos::prelude::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -42,9 +46,15 @@ async fn get_browser_location() -> Result<(f64, f64), String> {
             let _ = reject.call1(&JsValue::UNDEFINED, &msg);
         });
 
-        let _ = geolocation.get_current_position_with_error_callback(
+        // Give the browser 10 seconds to resolve; after that the error
+        // callback fires automatically and we fall through to Idle state.
+        let opts = web_sys::PositionOptions::new();
+        opts.set_timeout(10_000);
+
+        let _ = geolocation.get_current_position_with_error_callback_and_options(
             on_success.as_ref().unchecked_ref(),
             Some(on_error.as_ref().unchecked_ref()),
+            &opts,
         );
 
         // Leak the closures so they live long enough for the JS callback to fire.
@@ -94,6 +104,8 @@ enum AppView {
 #[component]
 fn App() -> impl IntoView {
     let view_state = RwSignal::new(AppView::Detecting);
+    let favorites  = RwSignal::new(load_favorites());
+    let is_light   = RwSignal::new(false);
 
     // Shared helper: given coordinates, fetch AQI and update the view.
     let load_aqi = move |lat: f64, lng: f64| {
@@ -124,7 +136,7 @@ fn App() -> impl IntoView {
     }
 
     view! {
-        <div class="app">
+        <div class=move || if is_light.get() { "app theme-light" } else { "app" }>
             <header class="header">
                 <div class="header__brand">
                     <span class="header__logo">"🌍"</span>
@@ -134,6 +146,15 @@ fn App() -> impl IntoView {
 
                 <div class="header__controls">
                     <SearchBar on_select=move |lat, lng| load_aqi(lat, lng) />
+                    <FavoritesBar favorites=favorites on_select=move |lat, lng| load_aqi(lat, lng) />
+
+                    <button
+                        class="btn-theme"
+                        title="Toggle light/dark theme"
+                        on:click=move |_| is_light.update(|v| *v = !*v)
+                    >
+                        {move || if is_light.get() { "🌙" } else { "☀️" }}
+                    </button>
 
                     <button
                         class="btn-locate"
@@ -164,39 +185,129 @@ fn App() -> impl IntoView {
                     AppView::Detecting => view! {
                         <div class="status-panel">
                             <div class="spinner" />
-                            <p>"Detecting your location…"</p>
+                            <p class="status-panel__msg">"Detecting your location…"</p>
                             <p class="status-panel__hint">
-                                "If prompted, please allow location access for automatic detection."
+                                "If prompted, please allow location access."
                             </p>
+                            <button
+                                class="btn-skip"
+                                on:click=move |_| view_state.set(AppView::Idle)
+                            >
+                                "Skip — search manually"
+                            </button>
                         </div>
                     }.into_any(),
 
                     AppView::Loading => view! {
-                        <div class="status-panel">
-                            <div class="spinner" />
-                            <p>"Fetching air quality data…"</p>
+                        <div class="dashboard">
+                            // AQI card skeleton
+                            <div class="skeleton-card">
+                                <div class="skeleton-card__header">
+                                    <div class="skel skel--title" />
+                                    <div class="skel skel--chip" />
+                                </div>
+                                <div class="skeleton-card__body">
+                                    <div class="skel skel--circle" />
+                                    <div class="skeleton-card__lines">
+                                        <div class="skel skel--line skel--line-lg" />
+                                        <div class="skel skel--line skel--line-md" />
+                                        <div class="skel skel--line skel--line-sm" />
+                                    </div>
+                                </div>
+                                <div class="skel skel--bar" />
+                            </div>
+                            // Pollutants skeleton
+                            <div class="skeleton-card">
+                                <div class="skel skel--line skel--line-sm" style="margin-bottom:1rem" />
+                                <div class="skeleton-card__grid">
+                                    <div class="skel skel--tile" />
+                                    <div class="skel skel--tile" />
+                                    <div class="skel skel--tile" />
+                                    <div class="skel skel--tile" />
+                                    <div class="skel skel--tile" />
+                                    <div class="skel skel--tile" />
+                                </div>
+                            </div>
                         </div>
                     }.into_any(),
 
                     AppView::Loaded(data) => {
                         let iaqi = data.iaqi.clone();
+                        let city_name = data.city.name.clone();
+                        let lat = data.city.geo.first().copied().unwrap_or(0.0);
+                        let lng = data.city.geo.get(1).copied().unwrap_or(0.0);
+                        let is_saved = favorites.get_untracked()
+                            .iter()
+                            .any(|f| f.name == city_name);
+                        let city_for_save = city_name.clone();
+                        let on_toggle_save = Callback::new(move |_: ()| {
+                            favorites.update(|v| {
+                                if let Some(pos) = v.iter().position(|f| f.name == city_for_save) {
+                                    v.remove(pos);
+                                } else {
+                                    v.push(FavoriteLocation {
+                                        name: city_for_save.clone(),
+                                        lat,
+                                        lng,
+                                    });
+                                }
+                                persist_favorites(v);
+                            });
+                        });
+                        let forecast_entries = data.sparkline_data();
+                        let forecast_today   = data.time.s.clone();
+                        let uvi              = data.uvi_today();
                         view! {
                             <div class="dashboard">
-                                <AqiCard data=data />
-                                <PollutantsGrid iaqi=iaqi />
+                                <AqiCard
+                                    data=data
+                                    is_saved=is_saved
+                                    on_toggle_save=on_toggle_save
+                                />
+                                <ForecastPanel
+                                    entries=forecast_entries
+                                    today=forecast_today
+                                />
+                                <PollutantsGrid iaqi=iaqi uvi=uvi />
                             </div>
                         }.into_any()
                     },
 
-                    AppView::Error(msg) => view! {
-                        <div class="status-panel status-panel--error">
-                            <p class="status-panel__icon">"⚠️"</p>
-                            <p class="status-panel__msg">{msg}</p>
-                            <p class="status-panel__hint">
-                                "Try searching for a city above, or use the My Location button."
-                            </p>
-                        </div>
-                    }.into_any(),
+                    AppView::Error(msg) => {
+                        let load_aqi = load_aqi.clone();
+                        view! {
+                            <div class="status-panel status-panel--error">
+                                <p class="status-panel__icon">"⚠️"</p>
+                                <p class="status-panel__msg">{msg}</p>
+                                <p class="status-panel__hint">
+                                    "Try searching for a city above, or retry your location."
+                                </p>
+                                <div class="status-panel__actions">
+                                    <button
+                                        class="btn-retry"
+                                        on:click=move |_| {
+                                            let load_aqi = load_aqi.clone();
+                                            spawn_local(async move {
+                                                view_state.set(AppView::Detecting);
+                                                match get_browser_location().await {
+                                                    Ok((lat, lng)) => load_aqi(lat, lng),
+                                                    Err(_) => view_state.set(AppView::Idle),
+                                                }
+                                            });
+                                        }
+                                    >
+                                        "↺ Retry location"
+                                    </button>
+                                    <button
+                                        class="btn-skip"
+                                        on:click=move |_| view_state.set(AppView::Idle)
+                                    >
+                                        "Search manually"
+                                    </button>
+                                </div>
+                            </div>
+                        }.into_any()
+                    },
 
                     AppView::Idle => view! {
                         <div class="status-panel">

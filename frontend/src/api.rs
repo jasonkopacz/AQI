@@ -19,6 +19,34 @@ pub struct AqiData {
     pub dominant_pol: Option<String>,
     pub iaqi: Iaqi,
     pub time: TimeInfo,
+    /// Optional multi-day forecast block provided by WAQI.
+    pub forecast: Option<ForecastData>,
+}
+
+// ---------------------------------------------------------------------------
+// Forecast types
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct ForecastData {
+    pub daily: Option<DailyForecast>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct DailyForecast {
+    pub pm25: Option<Vec<DailyEntry>>,
+    pub pm10: Option<Vec<DailyEntry>>,
+    pub o3:   Option<Vec<DailyEntry>>,
+    pub uvi:  Option<Vec<DailyEntry>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DailyEntry {
+    /// Calendar date string, e.g. "2026-04-23"
+    pub day: String,
+    pub avg: Option<i32>,
+    pub max: Option<i32>,
+    pub min: Option<i32>,
 }
 
 impl AqiData {
@@ -36,6 +64,33 @@ impl AqiData {
             Some(n) => AqiCategory::from(n),
             None => AqiCategory::Unknown,
         }
+    }
+
+    /// Returns today's UV index average from forecast data, if available.
+    pub fn uvi_today(&self) -> Option<f64> {
+        let daily = self.forecast.as_ref()?.daily.as_ref()?;
+        let today = self.time.s.as_deref().map(|s| &s[..s.len().min(10)])?;
+        daily.uvi.as_ref()?.iter()
+            .find(|e| e.day == today)
+            .and_then(|e| e.avg.map(|v| v as f64))
+    }
+
+    /// Returns daily avg AQI entries to drive the sparkline.
+    /// Prefers pm25 (most relevant), falls back to pm10 then o3.
+    /// Returns an empty vec if no forecast data is present.
+    pub fn sparkline_data(&self) -> Vec<DailyEntry> {
+        let daily = match self.forecast.as_ref().and_then(|f| f.daily.as_ref()) {
+            Some(d) => d,
+            None => return vec![],
+        };
+        let series = daily
+            .pm25
+            .as_ref()
+            .filter(|v| !v.is_empty())
+            .or_else(|| daily.pm10.as_ref().filter(|v| !v.is_empty()))
+            .or_else(|| daily.o3.as_ref().filter(|v| !v.is_empty()));
+
+        series.cloned().unwrap_or_default()
     }
 }
 
@@ -156,6 +211,80 @@ impl AqiCategory {
             Self::VeryUnhealthy   => "Health alert: everyone may experience more serious health effects.",
             Self::Hazardous       => "Health warning of emergency conditions. The entire population is more likely to be affected.",
             Self::Unknown         => "Data unavailable for this location.",
+        }
+    }
+
+    /// Emoji icon representing the health risk level.
+    pub fn icon(&self) -> &'static str {
+        match self {
+            Self::Good            => "✅",
+            Self::Moderate        => "🟡",
+            Self::SensitiveGroups => "⚠️",
+            Self::Unhealthy       => "🔴",
+            Self::VeryUnhealthy   => "🟣",
+            Self::Hazardous       => "☠️",
+            Self::Unknown         => "❓",
+        }
+    }
+
+    /// Groups who should take extra precaution at this AQI level.
+    /// Returns an empty slice when no specific groups are at elevated risk.
+    pub fn sensitive_groups(&self) -> &'static [&'static str] {
+        match self {
+            Self::Good            => &[],
+            Self::Moderate        => &["People unusually sensitive to air pollution"],
+            Self::SensitiveGroups => &["Children", "Elderly", "Asthma / lung disease", "Heart disease"],
+            Self::Unhealthy       => &["Children", "Elderly", "Asthma / lung disease", "Heart disease", "Everyone"],
+            Self::VeryUnhealthy   => &["Everyone"],
+            Self::Hazardous       => &["Everyone — emergency conditions"],
+            Self::Unknown         => &[],
+        }
+    }
+
+    /// Specific, actionable recommendations for this AQI level.
+    pub fn recommendations(&self) -> &'static [&'static str] {
+        match self {
+            Self::Good => &[
+                "Enjoy outdoor activities freely",
+                "Great day for exercise outside",
+                "Windows can be left open",
+            ],
+            Self::Moderate => &[
+                "Sensitive individuals should limit prolonged outdoor exertion",
+                "Consider moving intense workouts indoors if you feel symptoms",
+                "Children with asthma should watch for symptoms",
+            ],
+            Self::SensitiveGroups => &[
+                "Sensitive groups should reduce prolonged outdoor exertion",
+                "Take more breaks during outdoor activities",
+                "Keep asthma medication handy",
+                "Watch children for symptoms like coughing or shortness of breath",
+            ],
+            Self::Unhealthy => &[
+                "Everyone should reduce prolonged outdoor exertion",
+                "Sensitive groups should avoid outdoor activity",
+                "Move exercise indoors",
+                "Keep windows closed",
+                "Consider wearing an N95 mask outdoors",
+            ],
+            Self::VeryUnhealthy => &[
+                "Everyone should avoid outdoor exertion",
+                "Sensitive groups should remain indoors",
+                "Run air purifiers if available",
+                "Keep all windows and doors closed",
+                "Wear an N95 mask if you must go outside",
+            ],
+            Self::Hazardous => &[
+                "Stay indoors — emergency conditions",
+                "Keep windows and doors sealed",
+                "Run air purifiers on highest setting",
+                "Avoid ALL outdoor activity",
+                "Wear N95 mask if going outside is unavoidable",
+                "Seek medical attention if experiencing symptoms",
+            ],
+            Self::Unknown => &[
+                "Check back when data becomes available",
+            ],
         }
     }
 }
