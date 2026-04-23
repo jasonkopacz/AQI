@@ -1,6 +1,6 @@
+use crate::api::{AqiData, DailyEntry};
 use leptos::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::api::{AqiData, DailyEntry};
 
 #[component]
 pub fn AqiCard(
@@ -19,12 +19,7 @@ pub fn AqiCard(
     let advice = category.advice().to_string();
 
     // Format the timestamp
-    let timestamp = data
-        .time
-        .s
-        .as_deref()
-        .unwrap_or("—")
-        .to_string();
+    let timestamp = data.time.s.as_deref().unwrap_or("—").to_string();
 
     // Dominant pollutant, prettified
     let dominant = data
@@ -38,10 +33,6 @@ pub fn AqiCard(
     let groups = category.sensitive_groups();
     let tips = category.recommendations();
     let sparkline_entries = data.sparkline_data();
-    web_sys::console::log_1(&format!(
-        "[AqiCard] Rendering section panels for {} with AQI {:?}",
-        data.city.name, aqi_num
-    ).into());
 
     // Local reactive copy of the saved state so the button updates on click
     // without requiring the whole AqiCard to re-render.
@@ -49,16 +40,21 @@ pub fn AqiCard(
 
     // Share: copy a formatted summary to the clipboard.
     let share_label = RwSignal::new("Share");
-    let share_city  = data.city.name.clone();
-    let share_aqi   = aqi_num;
-    let share_cat   = label.clone();
+    let share_city = data.city.name.clone();
+    let share_aqi = aqi_num;
+    let share_cat = label.clone();
     let on_share = move |_: web_sys::MouseEvent| {
         let text = match share_aqi {
-            Some(n) => format!("AQI in {}: {} ({}) — checked via AQI Global Air Quality", share_city, n, share_cat),
-            None    => format!("Air quality in {} — checked via AQI Global Air Quality", share_city),
+            Some(n) => format!(
+                "AQI in {}: {} ({}) — checked via AQI Global Air Quality",
+                share_city, n, share_cat
+            ),
+            None => format!(
+                "Air quality in {} — checked via AQI Global Air Quality",
+                share_city
+            ),
         };
-        let clipboard = web_sys::window()
-            .map(|w| w.navigator().clipboard());
+        let clipboard = web_sys::window().map(|w| w.navigator().clipboard());
         if let Some(cb) = clipboard {
             let promise = cb.write_text(&text);
             spawn_local(async move {
@@ -144,10 +140,7 @@ pub fn AqiCard(
 
 /// A panel showing at-risk groups and specific health recommendations.
 #[component]
-fn HealthAdvisory(
-    groups: &'static [&'static str],
-    tips: &'static [&'static str],
-) -> impl IntoView {
+fn HealthAdvisory(groups: &'static [&'static str], tips: &'static [&'static str]) -> impl IntoView {
     // If there are no groups and only a single generic tip, skip the panel.
     if groups.is_empty() && tips.len() <= 1 {
         return view! { <div></div> }.into_any();
@@ -172,19 +165,20 @@ fn HealthAdvisory(
                 }).collect::<Vec<_>>()}
             </ul>
         </div>
-    }.into_any()
+    }
+    .into_any()
 }
 
 /// A horizontal scale bar illustrating where the current AQI sits.
 #[component]
 fn AqiScale(current: Option<u32>) -> impl IntoView {
     let segments = [
-        ("Good",      "aqi-good",           50u32,  "0–50"),
-        ("Moderate",  "aqi-moderate",       100,    "51–100"),
-        ("Sensitive", "aqi-sensitive",      150,    "101–150"),
-        ("Unhealthy", "aqi-unhealthy",      200,    "151–200"),
-        ("Very",      "aqi-very-unhealthy", 300,    "201–300"),
-        ("Hazardous", "aqi-hazardous",      500,    "301+"),
+        ("Good", "aqi-good", 50u32, "0–50"),
+        ("Moderate", "aqi-moderate", 100, "51–100"),
+        ("Sensitive", "aqi-sensitive", 150, "101–150"),
+        ("Unhealthy", "aqi-unhealthy", 200, "151–200"),
+        ("Very", "aqi-very-unhealthy", 300, "201–300"),
+        ("Hazardous", "aqi-hazardous", 500, "301+"),
     ];
 
     view! {
@@ -240,7 +234,10 @@ fn Sparkline(entries: Vec<DailyEntry>, today: Option<String>) -> impl IntoView {
     }
 
     let min_v = points.iter().map(|(_, v)| *v).fold(f64::INFINITY, f64::min);
-    let max_v = points.iter().map(|(_, v)| *v).fold(f64::NEG_INFINITY, f64::max);
+    let max_v = points
+        .iter()
+        .map(|(_, v)| *v)
+        .fold(f64::NEG_INFINITY, f64::max);
     let range = (max_v - min_v).max(1.0);
     let n = points.len() as f64;
 
@@ -252,7 +249,7 @@ fn Sparkline(entries: Vec<DailyEntry>, today: Option<String>) -> impl IntoView {
         .to_string();
 
     // Map each point to SVG coordinates
-    let coords: Vec<(f64, f64, String, f64)> = points
+    let coords: Vec<(f64, f64, String, f64, String)> = points
         .iter()
         .enumerate()
         .map(|(i, (day, val))| {
@@ -260,14 +257,14 @@ fn Sparkline(entries: Vec<DailyEntry>, today: Option<String>) -> impl IntoView {
             let y = PAD_TOP + (1.0 - (val - min_v) / range) * (H - PAD_TOP - PAD_BOT);
             // Short day label: "Mon", "Tue", etc. derived from the date string
             let label = day_label(day);
-            (x, y, label, *val)
+            (x, y, label, *val, day.clone())
         })
         .collect();
 
     // Build polyline points string
     let polyline = coords
         .iter()
-        .map(|(x, y, _, _)| format!("{x:.1},{y:.1}"))
+        .map(|(x, y, _, _, _)| format!("{x:.1},{y:.1}"))
         .collect::<Vec<_>>()
         .join(" ");
 
@@ -292,8 +289,8 @@ fn Sparkline(entries: Vec<DailyEntry>, today: Option<String>) -> impl IntoView {
                     points=polyline.clone()
                 />
                 // Dots at each data point
-                {coords.iter().map(|(x, y, label, val)| {
-                    let is_today = label == &day_label(&today_date);
+                {coords.iter().map(|(x, y, label, val, day)| {
+                    let is_today = day == &today_date;
                     let cx = format!("{x:.1}");
                     let cy = format!("{y:.1}");
                     let label_x = format!("{x:.1}");
@@ -333,9 +330,15 @@ fn day_label(date: &str) -> String {
     if parts.len() != 3 {
         return date.to_string();
     }
-    let Ok(y) = parts[0].parse::<i32>() else { return date.to_string() };
-    let Ok(m) = parts[1].parse::<i32>() else { return date.to_string() };
-    let Ok(d) = parts[2].parse::<i32>() else { return date.to_string() };
+    let Ok(y) = parts[0].parse::<i32>() else {
+        return date.to_string();
+    };
+    let Ok(m) = parts[1].parse::<i32>() else {
+        return date.to_string();
+    };
+    let Ok(d) = parts[2].parse::<i32>() else {
+        return date.to_string();
+    };
 
     // Tomohiko Sakamoto's algorithm for day-of-week (0=Sun)
     let t = [0i32, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
@@ -356,10 +359,10 @@ fn prettify_pollutant(raw: &str) -> &str {
     match raw {
         "pm25" => "PM₂.₅",
         "pm10" => "PM₁₀",
-        "no2"  => "NO₂",
-        "o3"   => "O₃",
-        "co"   => "CO",
-        "so2"  => "SO₂",
-        other  => other,
+        "no2" => "NO₂",
+        "o3" => "O₃",
+        "co" => "CO",
+        "so2" => "SO₂",
+        other => other,
     }
 }

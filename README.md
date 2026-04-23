@@ -50,6 +50,10 @@ Get a free API token at **https://aqicn.org/data-platform/token/** and create yo
 cp .env.example backend/.env
 # Edit backend/.env and set your token:
 # WAQI_API_TOKEN=your_token_here
+# Optional:
+# CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+# HOST=0.0.0.0
+# PORT=3000
 ```
 
 > The backend keeps your token server-side so it is never exposed in the compiled WASM binary.
@@ -103,6 +107,8 @@ air-quality-app/
         ├── api.rs              # WAQI types + async fetch helpers
         └── components/
             ├── aqi_card.rs     # AQI gauge, category, colour scale bar
+            ├── forecast.rs     # Daily forecast cards + tooltip detail
+            ├── favorites.rs    # Saved locations dropdown + localStorage
             ├── pollutants.rs   # Per-pollutant grid + weather row
             └── search.rs       # Debounced search input + dropdown
 ```

@@ -1,11 +1,8 @@
-use leptos::prelude::*;
 use crate::api::Iaqi;
+use leptos::prelude::*;
 
 #[component]
-pub fn PollutantsGrid(
-    iaqi: Iaqi,
-    uvi: Option<f64>,
-) -> impl IntoView {
+pub fn PollutantsGrid(iaqi: Iaqi, uvi: Option<f64>) -> impl IntoView {
     let use_fahrenheit = RwSignal::new(false);
 
     view! {
@@ -98,8 +95,7 @@ fn PollutantTile(
     unit: &'static str,
     value: Option<f64>,
     description: &'static str,
-    #[prop(default = "")]
-    tooltip: &'static str,
+    #[prop(default = "")] tooltip: &'static str,
 ) -> impl IntoView {
     let display = value
         .map(|v| format!("{v:.1}"))
@@ -174,21 +170,21 @@ fn TempTile(celsius: f64, use_fahrenheit: RwSignal<bool>) -> impl IntoView {
 
 fn uvi_label(uvi: f64) -> &'static str {
     match uvi as u32 {
-        0..=2  => "Low",
-        3..=5  => "Moderate",
-        6..=7  => "High",
+        0..=2 => "Low",
+        3..=5 => "Moderate",
+        6..=7 => "High",
         8..=10 => "Very High",
-        _      => "Extreme",
+        _ => "Extreme",
     }
 }
 
 fn uvi_icon(uvi: f64) -> &'static str {
     match uvi as u32 {
-        0..=2  => "🌤",
-        3..=5  => "☀️",
-        6..=7  => "🔆",
+        0..=2 => "🌤",
+        3..=5 => "☀️",
+        6..=7 => "🔆",
         8..=10 => "🌞",
-        _      => "⚠️",
+        _ => "⚠️",
     }
 }
 

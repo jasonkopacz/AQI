@@ -1,8 +1,8 @@
-use leptos::prelude::*;
+use crate::api::{fetch_aqi_search, SearchResult};
 use gloo_timers::future::TimeoutFuture;
+use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen_futures::spawn_local;
-use crate::api::{fetch_aqi_search, SearchResult};
 
 const RECENT_KEY: &str = "aqi_recent";
 const MAX_RECENT: usize = 5;
@@ -14,14 +14,16 @@ const MAX_RECENT: usize = 5;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RecentLocation {
     pub name: String,
-    pub lat:  f64,
-    pub lng:  f64,
+    pub lat: f64,
+    pub lng: f64,
 }
 
 fn load_recent() -> Vec<RecentLocation> {
     let json = web_sys::window()
-        .and_then(|w| w.local_storage().ok()).flatten()
-        .and_then(|s| s.get_item(RECENT_KEY).ok()).flatten();
+        .and_then(|w| w.local_storage().ok())
+        .flatten()
+        .and_then(|s| s.get_item(RECENT_KEY).ok())
+        .flatten();
     match json {
         Some(ref s) => serde_json::from_str(s).unwrap_or_default(),
         None => vec![],
@@ -30,10 +32,13 @@ fn load_recent() -> Vec<RecentLocation> {
 
 fn push_recent(loc: RecentLocation) -> Vec<RecentLocation> {
     let mut list = load_recent();
-    list.retain(|r| r.name != loc.name);
+    list.retain(|r| !(r.lat == loc.lat && r.lng == loc.lng));
     list.insert(0, loc);
     list.truncate(MAX_RECENT);
-    if let Some(s) = web_sys::window().and_then(|w| w.local_storage().ok()).flatten() {
+    if let Some(s) = web_sys::window()
+        .and_then(|w| w.local_storage().ok())
+        .flatten()
+    {
         if let Ok(json) = serde_json::to_string(&list) {
             let _ = s.set_item(RECENT_KEY, &json);
         }
@@ -50,12 +55,12 @@ pub fn SearchBar(
     /// Called when the user selects a result — passes (lat, lng).
     on_select: impl Fn(f64, f64) + 'static + Clone + Send,
 ) -> impl IntoView {
-    let query      = RwSignal::new(String::new());
-    let results    = RwSignal::new(Vec::<SearchResult>::new());
-    let is_open    = RwSignal::new(false);
+    let query = RwSignal::new(String::new());
+    let results = RwSignal::new(Vec::<SearchResult>::new());
+    let is_open = RwSignal::new(false);
     let is_loading = RwSignal::new(false);
-    let error      = RwSignal::new(None::<String>);
-    let recent     = RwSignal::new(load_recent());
+    let error = RwSignal::new(None::<String>);
+    let recent = RwSignal::new(load_recent());
     let show_recent = RwSignal::new(false);
 
     let version = RwSignal::new(0u32);
@@ -81,7 +86,9 @@ pub fn SearchBar(
 
             spawn_local(async move {
                 TimeoutFuture::new(400).await;
-                if version.get_untracked() != v { return; }
+                if version.get_untracked() != v {
+                    return;
+                }
 
                 match fetch_aqi_search(&value).await {
                     Ok(data) => {
@@ -189,8 +196,6 @@ pub fn SearchBar(
                     view! {
                         <ul class="search-dropdown">
                             {res.into_iter().map(|r| {
-                                let lat     = r.station.geo.first().copied().unwrap_or(0.0);
-                                let lng     = r.station.geo.get(1).copied().unwrap_or(0.0);
                                 let name    = r.station.name.clone();
                                 let country = r.station.country.clone().unwrap_or_default();
                                 let aqi_display = r.aqi_number()
@@ -198,31 +203,52 @@ pub fn SearchBar(
                                     .unwrap_or_else(|| "—".to_string());
                                 let on_select = on_select.clone();
                                 let save_name = name.clone();
+                                let coords = r.station.geo.first().zip(r.station.geo.get(1));
                                 view! {
-                                    <li
-                                        class="search-dropdown__item"
-                                        on:mousedown=move |_| {
-                                            // Save to recents before calling on_select
-                                            let updated = push_recent(RecentLocation {
-                                                name: save_name.clone(),
-                                                lat,
-                                                lng,
-                                            });
-                                            recent.set(updated);
-                                            on_select(lat, lng);
-                                            is_open.set(false);
-                                            query.set(String::new());
-                                            results.set(vec![]);
+                                    {match coords {
+                                        Some((lat, lng)) => {
+                                            let lat = *lat;
+                                            let lng = *lng;
+                                            view! {
+                                                <li
+                                                    class="search-dropdown__item"
+                                                    on:mousedown=move |_| {
+                                                        let updated = push_recent(RecentLocation {
+                                                            name: save_name.clone(),
+                                                            lat,
+                                                            lng,
+                                                        });
+                                                        recent.set(updated);
+                                                        on_select(lat, lng);
+                                                        is_open.set(false);
+                                                        query.set(String::new());
+                                                        results.set(vec![]);
+                                                    }
+                                                >
+                                                    <span class="search-dropdown__name">{name.clone()}</span>
+                                                    <span class="search-dropdown__meta">
+                                                        {(!country.is_empty()).then(|| view! {
+                                                            <span class="search-dropdown__country">{country.clone()}</span>
+                                                        })}
+                                                        <span class="search-dropdown__aqi">"AQI: " {aqi_display.clone()}</span>
+                                                    </span>
+                                                </li>
+                                            }.into_any()
                                         }
-                                    >
-                                        <span class="search-dropdown__name">{name}</span>
-                                        <span class="search-dropdown__meta">
-                                            {(!country.is_empty()).then(|| view! {
-                                                <span class="search-dropdown__country">{country}</span>
-                                            })}
-                                            <span class="search-dropdown__aqi">"AQI: " {aqi_display}</span>
-                                        </span>
-                                    </li>
+                                        None => {
+                                            view! {
+                                                <li class="search-dropdown__item search-dropdown__item--disabled">
+                                                    <span class="search-dropdown__name">{name}</span>
+                                                    <span class="search-dropdown__meta">
+                                                        {(!country.is_empty()).then(|| view! {
+                                                            <span class="search-dropdown__country">{country}</span>
+                                                        })}
+                                                        <span class="search-dropdown__aqi">"Location unavailable"</span>
+                                                    </span>
+                                                </li>
+                                            }.into_any()
+                                        }
+                                    }}
                                 }
                             }).collect::<Vec<_>>()}
                         </ul>

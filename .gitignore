@@ -3,7 +3,6 @@
 /backend/target/
 /frontend/target/
 
-Cargo.lock
 # ── Trunk / WASM build output ─────────────────────────────────────────────────
 /frontend/dist/
 

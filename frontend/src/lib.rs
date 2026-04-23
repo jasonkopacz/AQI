@@ -1,10 +1,9 @@
 mod api;
 mod components;
 
-use api::{AqiData, fetch_aqi_by_geo};
+use api::{fetch_aqi_by_geo, AqiData};
 use components::{
-    AqiCard, FavoritesBar, FavoriteLocation, ForecastPanel,
-    load_favorites, persist_favorites,
+    load_favorites, persist_favorites, AqiCard, FavoriteLocation, FavoritesBar, ForecastPanel,
     PollutantsGrid, SearchBar,
 };
 use leptos::prelude::*;
@@ -104,16 +103,25 @@ enum AppView {
 #[component]
 fn App() -> impl IntoView {
     let view_state = RwSignal::new(AppView::Detecting);
-    let favorites  = RwSignal::new(load_favorites());
-    let is_light   = RwSignal::new(false);
+    let favorites = RwSignal::new(load_favorites());
+    let is_light = RwSignal::new(false);
+    let request_version = RwSignal::new(0u64);
 
     // Shared helper: given coordinates, fetch AQI and update the view.
     let load_aqi = move |lat: f64, lng: f64| {
+        let current_request = request_version.get_untracked() + 1;
+        request_version.set(current_request);
         view_state.set(AppView::Loading);
         spawn_local(async move {
             match fetch_aqi_by_geo(lat, lng).await {
-                Ok(data) => view_state.set(AppView::Loaded(data)),
-                Err(e)   => view_state.set(AppView::Error(e)),
+                Ok(data) if request_version.get_untracked() == current_request => {
+                    view_state.set(AppView::Loaded(data));
+                }
+                Err(e) if request_version.get_untracked() == current_request => {
+                    view_state.set(AppView::Error(e));
+                }
+                Ok(_) => {}
+                Err(_) => {}
             }
         });
     };
@@ -238,11 +246,13 @@ fn App() -> impl IntoView {
                         let lng = data.city.geo.get(1).copied().unwrap_or(0.0);
                         let is_saved = favorites.get_untracked()
                             .iter()
-                            .any(|f| f.name == city_name);
+                            .any(|f| f.lat == lat && f.lng == lng);
                         let city_for_save = city_name.clone();
                         let on_toggle_save = Callback::new(move |_: ()| {
                             favorites.update(|v| {
-                                if let Some(pos) = v.iter().position(|f| f.name == city_for_save) {
+                                if let Some(pos) =
+                                    v.iter().position(|f| f.lat == lat && f.lng == lng)
+                                {
                                     v.remove(pos);
                                 } else {
                                     v.push(FavoriteLocation {
@@ -255,11 +265,8 @@ fn App() -> impl IntoView {
                             });
                         });
                         let forecast_entries = data.forecast_day_details();
-                        web_sys::console::log_1(
-                            &format!("Forecast tooltip payload days: {}", forecast_entries.len()).into(),
-                        );
-                        let forecast_today   = data.time.s.clone();
-                        let uvi              = data.uvi_today();
+                        let forecast_today = data.time.s.clone();
+                        let uvi = data.uvi_today();
                         view! {
                             <div class="dashboard">
                                 <AqiCard

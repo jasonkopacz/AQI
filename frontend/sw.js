@@ -37,12 +37,16 @@ self.addEventListener('fetch', event => {
 
   // API calls: network-first, stale fallback
   if (url.pathname.startsWith('/api/')) {
+    if (request.method !== 'GET') {
+      return;
+    }
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Clone before consuming
-          const clone = response.clone();
-          caches.open(DATA_CACHE).then(cache => cache.put(request, clone));
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(DATA_CACHE).then(cache => cache.put(request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(request))
@@ -56,12 +60,16 @@ self.addEventListener('fetch', event => {
       if (cached) {
         // Refresh in background
         fetch(request).then(response => {
-          caches.open(SHELL_CACHE).then(cache => cache.put(request, response));
+          if (response.ok) {
+            caches.open(SHELL_CACHE).then(cache => cache.put(request, response));
+          }
         }).catch(() => {});
         return cached;
       }
       return fetch(request).then(response => {
-        caches.open(SHELL_CACHE).then(cache => cache.put(request, response.clone()));
+        if (response.ok) {
+          caches.open(SHELL_CACHE).then(cache => cache.put(request, response.clone()));
+        }
         return response;
       });
     })

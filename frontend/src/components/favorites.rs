@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use gloo_timers::future::TimeoutFuture;
+use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen_futures::spawn_local;
 
@@ -123,7 +123,9 @@ pub fn FavoritesBar(
                                                 title="Remove"
                                                 on:mousedown=move |_| {
                                                     favorites.update(|v| {
-                                                        v.retain(|f| f.name != name_rm);
+                                                        v.retain(|f| {
+                                                            !(f.name == name_rm && f.lat == lat && f.lng == lng)
+                                                        });
                                                         persist_favorites(v);
                                                     });
                                                 }

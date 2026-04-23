@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use crate::api::{AqiCategory, DailyEntry, ForecastDayDetails};
+use leptos::prelude::*;
 
 /// Horizontal row of day cards showing the multi-day AQI forecast.
 /// Entries should already be the best available series (pm25 → pm10 → o3).
@@ -169,15 +169,29 @@ fn format_measurement_row(entry: &Option<DailyEntry>) -> String {
 
 fn day_label(date: &str) -> String {
     let parts: Vec<&str> = date.split('-').collect();
-    if parts.len() != 3 { return date.to_string(); }
-    let Ok(y) = parts[0].parse::<i32>() else { return date.to_string() };
-    let Ok(m) = parts[1].parse::<i32>() else { return date.to_string() };
-    let Ok(d) = parts[2].parse::<i32>() else { return date.to_string() };
+    if parts.len() != 3 {
+        return date.to_string();
+    }
+    let Ok(y) = parts[0].parse::<i32>() else {
+        return date.to_string();
+    };
+    let Ok(m) = parts[1].parse::<i32>() else {
+        return date.to_string();
+    };
+    let Ok(d) = parts[2].parse::<i32>() else {
+        return date.to_string();
+    };
     let t = [0i32, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
     let year = if m < 3 { y - 1 } else { y };
-    let dow = (year + year/4 - year/100 + year/400 + t[(m-1) as usize] + d) % 7;
+    let dow = (year + year / 4 - year / 100 + year / 400 + t[(m - 1) as usize] + d) % 7;
     match dow {
-        0 => "Sun", 1 => "Mon", 2 => "Tue", 3 => "Wed",
-        4 => "Thu", 5 => "Fri", _ => "Sat",
-    }.to_string()
+        0 => "Sun",
+        1 => "Mon",
+        2 => "Tue",
+        3 => "Wed",
+        4 => "Thu",
+        5 => "Fri",
+        _ => "Sat",
+    }
+    .to_string()
 }

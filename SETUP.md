@@ -31,6 +31,10 @@ Copy `.env.example` to `backend/.env` and fill in your token:
 cp .env.example backend/.env
 # then edit backend/.env:
 WAQI_API_TOKEN=your_token_here
+# Optional:
+# CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+# HOST=0.0.0.0
+# PORT=3000
 ```
 
 ---
@@ -82,10 +86,12 @@ air-quality-app/
     ├── index.html          # Shell HTML (Trunk injects WASM here)
     ├── style.css
     └── src/
-        ├── main.rs         # Leptos App component + geolocation logic
+        ├── lib.rs          # Leptos App component + geolocation logic
         ├── api.rs          # WAQI response types + async fetch helpers
         └── components/
             ├── aqi_card.rs     # Large AQI display + colour-coded scale bar
+            ├── forecast.rs     # Daily forecast cards + tooltip detail
+            ├── favorites.rs    # Saved locations dropdown + localStorage
             ├── pollutants.rs   # Per-pollutant grid + weather conditions
             └── search.rs       # Debounced search input + dropdown
 ```
