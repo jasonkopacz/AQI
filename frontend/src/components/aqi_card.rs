@@ -277,7 +277,7 @@ fn Sparkline(entries: Vec<DailyEntry>, today: Option<String>) -> impl IntoView {
             <svg
                 class="sparkline__svg"
                 viewBox=format!("0 0 {W} {H}")
-                preserveAspectRatio="none"
+                preserveAspectRatio="xMidYMid meet"
                 aria-hidden="true"
             >
                 // Filled area under the line

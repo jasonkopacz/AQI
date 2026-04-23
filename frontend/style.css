@@ -700,12 +700,12 @@ a:hover { text-decoration: underline; }
 }
 
 .aqi-card__section--sparkline {
-  padding: 0.9rem 1rem 0.8rem;
+  padding: 1rem 1rem 0.95rem;
   margin-bottom: 1.25rem;
 }
 
 .aqi-card__section--scale {
-  padding: 0.75rem;
+  padding: 0.95rem 0.75rem 0.85rem;
 }
 
 /* The large AQI circle */
@@ -716,8 +716,6 @@ a:hover { text-decoration: underline; }
   justify-content: center;
   width: 130px;
   height: 130px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.12);
   flex-shrink: 0;
 }
 
@@ -860,7 +858,7 @@ a:hover { text-decoration: underline; }
 
 .sparkline__svg {
   width: 100%;
-  height: 72px;
+  height: 96px;
   display: block;
   overflow: visible;
 }
@@ -917,7 +915,7 @@ a:hover { text-decoration: underline; }
 .aqi-scale {
   display: flex;
   gap: 3px;
-  height: 48px;
+  height: 62px;
   align-items: flex-end;
 }
 
@@ -927,29 +925,30 @@ a:hover { text-decoration: underline; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
+  font-size: 0.64rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border-radius: 6px;
   opacity: 0.38;
-  height: 32px;
+  height: 42px;
   position: relative;
   transition: opacity 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
   cursor: default;
-  padding: 3px 2px;
+  padding: 4px 3px;
   /* Depth: inner highlight on top edge */
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.15);
 }
 
 .aqi-scale__segment.active {
   opacity: 1;
-  height: 48px;
-  flex: 1.6;
+  height: 42px;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.35),
     inset 0 -1px 0 rgba(0,0,0,0.2),
     0 4px 12px rgba(0,0,0,0.25);
+  outline: 2px solid rgba(255,255,255,0.45);
+  outline-offset: -2px;
 }
 
 /* Downward-pointing triangle indicator on the active segment */
@@ -980,7 +979,7 @@ a:hover { text-decoration: underline; }
 }
 
 .aqi-scale__range {
-  font-size: 0.52rem;
+  font-size: 0.56rem;
   font-weight: 600;
   opacity: 0.8;
   letter-spacing: 0;
@@ -999,6 +998,7 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius);
   padding: 1.5rem;
   box-shadow: var(--shadow);
+  overflow: visible;
 }
 
 .forecast__title {
@@ -1013,15 +1013,19 @@ a:hover { text-decoration: underline; }
 .forecast__row {
   display: flex;
   gap: 0.6rem;
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow-y: visible;
   padding-bottom: 0.25rem;
 }
-.forecast__row::-webkit-scrollbar { display: none; }
 
-.forecast-card {
+.forecast-card-wrap {
+  position: relative;
   flex: 1;
   min-width: 80px;
+  overflow: visible;
+}
+
+.forecast-card {
+  width: 100%;
   border-radius: var(--radius-sm);
   padding: 0.85rem 0.65rem;
   display: flex;
@@ -1033,6 +1037,76 @@ a:hover { text-decoration: underline; }
   cursor: default;
 }
 .forecast-card:hover { transform: translateY(-2px); }
+
+.forecast-card-tooltip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-4px);
+  min-width: 250px;
+  width: max-content;
+  max-width: 320px;
+  background: #0b1220;
+  color: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  padding: 0.5rem 0.6rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.theme-light .forecast-card-tooltip {
+  background: #ffffff;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.forecast-card-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #0b1220;
+}
+
+.theme-light .forecast-card-tooltip::after {
+  border-bottom-color: #ffffff;
+}
+
+.forecast-card-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.forecast-card-tooltip__row strong {
+  font-weight: 700;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.forecast-card-tooltip__row span {
+  text-align: right;
+}
+
+.forecast-card-wrap:hover .forecast-card-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.forecast-card-wrap:focus-within .forecast-card-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 
 .forecast-card--today {
   border-color: rgba(0,0,0,0.25);
@@ -1083,6 +1157,7 @@ a:hover { text-decoration: underline; }
   background: rgba(0,0,0,0.3);
   border-radius: 2px;
 }
+
 
 /* ---------- Pollutants grid ---------- */
 .pollutants__header {

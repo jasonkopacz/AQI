@@ -254,7 +254,10 @@ fn App() -> impl IntoView {
                                 persist_favorites(v);
                             });
                         });
-                        let forecast_entries = data.sparkline_data();
+                        let forecast_entries = data.forecast_day_details();
+                        web_sys::console::log_1(
+                            &format!("Forecast tooltip payload days: {}", forecast_entries.len()).into(),
+                        );
                         let forecast_today   = data.time.s.clone();
                         let uvi              = data.uvi_today();
                         view! {

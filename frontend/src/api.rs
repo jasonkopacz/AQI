@@ -49,6 +49,16 @@ pub struct DailyEntry {
     pub min: Option<i32>,
 }
 
+#[derive(Debug, Clone)]
+pub struct ForecastDayDetails {
+    pub day: String,
+    pub primary: DailyEntry,
+    pub pm25: Option<DailyEntry>,
+    pub pm10: Option<DailyEntry>,
+    pub o3: Option<DailyEntry>,
+    pub uvi: Option<DailyEntry>,
+}
+
 impl AqiData {
     /// Returns the numeric AQI, or None if it is a placeholder like "-".
     pub fn aqi_number(&self) -> Option<u32> {
@@ -91,6 +101,56 @@ impl AqiData {
             .or_else(|| daily.o3.as_ref().filter(|v| !v.is_empty()));
 
         series.cloned().unwrap_or_default()
+    }
+
+    /// Returns per-day forecast details for the daily cards.
+    /// The card's primary AQI values follow the same fallback as sparkline_data:
+    /// pm25 -> pm10 -> o3.
+    pub fn forecast_day_details(&self) -> Vec<ForecastDayDetails> {
+        let daily = match self.forecast.as_ref().and_then(|f| f.daily.as_ref()) {
+            Some(d) => d,
+            None => return vec![],
+        };
+
+        let primary = daily
+            .pm25
+            .as_ref()
+            .filter(|v| !v.is_empty())
+            .or_else(|| daily.pm10.as_ref().filter(|v| !v.is_empty()))
+            .or_else(|| daily.o3.as_ref().filter(|v| !v.is_empty()));
+
+        let Some(primary_series) = primary else {
+            return vec![];
+        };
+
+        primary_series
+            .iter()
+            .cloned()
+            .map(|entry| {
+                let day = entry.day.clone();
+                let pm25 = daily.pm25.as_ref().and_then(|items| {
+                    items.iter().find(|e| e.day == day).cloned()
+                });
+                let pm10 = daily.pm10.as_ref().and_then(|items| {
+                    items.iter().find(|e| e.day == day).cloned()
+                });
+                let o3 = daily.o3.as_ref().and_then(|items| {
+                    items.iter().find(|e| e.day == day).cloned()
+                });
+                let uvi = daily.uvi.as_ref().and_then(|items| {
+                    items.iter().find(|e| e.day == day).cloned()
+                });
+
+                ForecastDayDetails {
+                    day,
+                    primary: entry,
+                    pm25,
+                    pm10,
+                    o3,
+                    uvi,
+                }
+            })
+            .collect()
     }
 }
 
