@@ -382,8 +382,19 @@ impl From<u32> for AqiCategory {
 // Fetch helpers  (called from Leptos components via spawn_local)
 // ---------------------------------------------------------------------------
 
+// When WAQI_API_TOKEN is set at build time (e.g. in the GitHub Pages CI job)
+// the frontend calls WAQI directly, bypassing the backend proxy.
+// In local development the token is absent and calls go to /api/... which
+// Trunk proxies to the Axum backend.
+const WAQI_TOKEN: Option<&str> = option_env!("WAQI_API_TOKEN");
+
 pub async fn fetch_aqi_by_geo(lat: f64, lng: f64) -> Result<AqiData, String> {
-    let url = format!("/api/aqi/geo?lat={lat}&lng={lng}");
+    let url = match WAQI_TOKEN {
+        Some(token) => format!(
+            "https://api.waqi.info/feed/geo:{lat};{lng}/?token={token}"
+        ),
+        None => format!("/api/aqi/geo?lat={lat}&lng={lng}"),
+    };
 
     let resp = gloo_net::http::Request::get(&url)
         .send()
@@ -408,7 +419,12 @@ pub async fn fetch_aqi_by_geo(lat: f64, lng: f64) -> Result<AqiData, String> {
 
 pub async fn fetch_aqi_search(query: &str) -> Result<Vec<SearchResult>, String> {
     let encoded = js_sys::encode_uri_component(query);
-    let url = format!("/api/aqi/search?q={encoded}");
+    let url = match WAQI_TOKEN {
+        Some(token) => format!(
+            "https://api.waqi.info/search/?token={token}&keyword={encoded}"
+        ),
+        None => format!("/api/aqi/search?q={encoded}"),
+    };
 
     let resp = gloo_net::http::Request::get(&url)
         .send()

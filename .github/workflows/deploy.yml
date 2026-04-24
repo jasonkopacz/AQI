@@ -34,6 +34,10 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          # Baked into the WASM at compile time so the static bundle can call
+          # WAQI directly without a backend proxy.
+          WAQI_API_TOKEN: ${{ secrets.WAQI_API_TOKEN }}
         # --public-url sets the asset base path to match the Pages sub-path
         # (e.g. https://jasonkopacz.github.io/air-quality-app/).
         run: trunk build --release --public-url "/${{ github.event.repository.name }}/"

@@ -231,7 +231,7 @@ fn App() -> impl IntoView {
                 <div class="header__brand">
                     <img
                         class="header__brand-logo"
-                        src="/icons/logo-brand.png"
+                        src="icons/logo-brand.png"
                         alt="AQI — Air Quality Info"
                         width="620"
                         height="488"
