@@ -42,12 +42,17 @@ pub fn AqiCard(
     // -----------------------------------------------------------------------
     // Share dropdown state
     // -----------------------------------------------------------------------
-    let share_open  = RwSignal::new(false);
-    let copy_label  = RwSignal::new("Copy link");
+    let share_open = RwSignal::new(false);
+    let copy_label = RwSignal::new("Copy link");
 
-    let aqi_str     = aqi_num.map(|n| n.to_string()).unwrap_or_else(|| "—".to_string());
+    let aqi_str = aqi_num
+        .map(|n| n.to_string())
+        .unwrap_or_else(|| "—".to_string());
     let share_title = format!("Air Quality in {}: {} ({})", data.city.name, aqi_str, label);
-    let share_body  = format!("Air quality in {}: {} ({}).", data.city.name, aqi_str, label);
+    let share_body = format!(
+        "Air quality in {}: {} ({}).",
+        data.city.name, aqi_str, label
+    );
 
     let mailto_href = format!(
         "mailto:?subject={}&body={}",
@@ -59,8 +64,7 @@ pub fn AqiCard(
     let has_native_share = web_sys::window()
         .map(|w| {
             let nav: wasm_bindgen::JsValue = w.navigator().into();
-            js_sys::Reflect::has(&nav, &wasm_bindgen::JsValue::from_str("share"))
-                .unwrap_or(false)
+            js_sys::Reflect::has(&nav, &wasm_bindgen::JsValue::from_str("share")).unwrap_or(false)
         })
         .unwrap_or(false);
 
@@ -403,21 +407,33 @@ fn ShareMenu(
 
     // --- Native share (Web Share API) ---
     let native_title = share_title.clone();
-    let native_body  = share_body.clone();
+    let native_body = share_body.clone();
     let on_native_share = move |_: web_sys::MouseEvent| {
         share_open.set(false);
         let title = native_title.clone();
-        let text  = native_body.clone();
-        let url   = web_sys::window()
+        let text = native_body.clone();
+        let url = web_sys::window()
             .and_then(|w| w.location().href().ok())
             .unwrap_or_default();
         spawn_local(async move {
             if let Some(window) = web_sys::window() {
                 let nav_val: wasm_bindgen::JsValue = window.navigator().into();
                 let data = js_sys::Object::new();
-                let _ = js_sys::Reflect::set(&data, &"title".into(), &wasm_bindgen::JsValue::from_str(&title));
-                let _ = js_sys::Reflect::set(&data, &"text".into(),  &wasm_bindgen::JsValue::from_str(&text));
-                let _ = js_sys::Reflect::set(&data, &"url".into(),   &wasm_bindgen::JsValue::from_str(&url));
+                let _ = js_sys::Reflect::set(
+                    &data,
+                    &"title".into(),
+                    &wasm_bindgen::JsValue::from_str(&title),
+                );
+                let _ = js_sys::Reflect::set(
+                    &data,
+                    &"text".into(),
+                    &wasm_bindgen::JsValue::from_str(&text),
+                );
+                let _ = js_sys::Reflect::set(
+                    &data,
+                    &"url".into(),
+                    &wasm_bindgen::JsValue::from_str(&url),
+                );
                 if let Ok(share_fn) = js_sys::Reflect::get(&nav_val, &"share".into()) {
                     if let Ok(f) = share_fn.dyn_into::<js_sys::Function>() {
                         if let Ok(pv) = f.call1(&nav_val, &data) {
@@ -478,15 +494,15 @@ fn ShareMenu(
 pub(crate) fn pct(s: &str) -> String {
     s.chars()
         .flat_map(|c| match c {
-            ' '  => "%20".chars().collect::<Vec<_>>(),
+            ' ' => "%20".chars().collect::<Vec<_>>(),
             '\n' => "%0A".chars().collect(),
             '\r' => "%0D".chars().collect(),
-            '&'  => "%26".chars().collect(),
-            '?'  => "%3F".chars().collect(),
-            '#'  => "%23".chars().collect(),
-            '+'  => "%2B".chars().collect(),
-            '"'  => "%22".chars().collect(),
-            _    => vec![c],
+            '&' => "%26".chars().collect(),
+            '?' => "%3F".chars().collect(),
+            '#' => "%23".chars().collect(),
+            '+' => "%2B".chars().collect(),
+            '"' => "%22".chars().collect(),
+            _ => vec![c],
         })
         .collect()
 }

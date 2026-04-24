@@ -58,7 +58,7 @@ pub(crate) fn build_share_url(lat: f64, lng: f64, city: &str) -> String {
             '#' => "%23".chars().collect(),
             '?' => "%3F".chars().collect(),
             '+' => "%2B".chars().collect(),
-            c   => vec![c],
+            c => vec![c],
         })
         .collect();
     format!("?lat={:.4}&lng={:.4}&city={}", lat, lng, encoded)
@@ -77,11 +77,7 @@ pub fn push_url_state(lat: f64, lng: f64, city: &str) {
     let url = build_share_url(lat, lng, city);
     if let Some(window) = web_sys::window() {
         if let Ok(history) = window.history() {
-            let _ = history.push_state_with_url(
-                &wasm_bindgen::JsValue::NULL,
-                "",
-                Some(&url),
-            );
+            let _ = history.push_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&url));
         }
     }
 }
