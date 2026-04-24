@@ -390,9 +390,7 @@ const WAQI_TOKEN: Option<&str> = option_env!("WAQI_API_TOKEN");
 
 pub async fn fetch_aqi_by_geo(lat: f64, lng: f64) -> Result<AqiData, String> {
     let url = match WAQI_TOKEN {
-        Some(token) => format!(
-            "https://api.waqi.info/feed/geo:{lat};{lng}/?token={token}"
-        ),
+        Some(token) => format!("https://api.waqi.info/feed/geo:{lat};{lng}/?token={token}"),
         None => format!("/api/aqi/geo?lat={lat}&lng={lng}"),
     };
 
@@ -420,9 +418,7 @@ pub async fn fetch_aqi_by_geo(lat: f64, lng: f64) -> Result<AqiData, String> {
 pub async fn fetch_aqi_search(query: &str) -> Result<Vec<SearchResult>, String> {
     let encoded = js_sys::encode_uri_component(query);
     let url = match WAQI_TOKEN {
-        Some(token) => format!(
-            "https://api.waqi.info/search/?token={token}&keyword={encoded}"
-        ),
+        Some(token) => format!("https://api.waqi.info/search/?token={token}&keyword={encoded}"),
         None => format!("/api/aqi/search?q={encoded}"),
     };
 
