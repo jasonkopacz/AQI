@@ -92,7 +92,7 @@ enum AppView {
     /// Location detected / coordinates chosen, loading AQI.
     Loading,
     /// AQI loaded successfully.
-    Loaded(AqiData),
+    Loaded(Box<AqiData>),
     /// Something went wrong.
     Error(String),
     /// User denied geolocation and hasn't searched yet.
@@ -118,7 +118,7 @@ fn App() -> impl IntoView {
         spawn_local(async move {
             match fetch_aqi_by_geo(lat, lng).await {
                 Ok(data) if request_version.get_untracked() == current_request => {
-                    view_state.set(AppView::Loaded(data));
+                    view_state.set(AppView::Loaded(Box::new(data)));
                 }
                 Err(e) if request_version.get_untracked() == current_request => {
                     view_state.set(AppView::Error(e));
@@ -132,7 +132,6 @@ fn App() -> impl IntoView {
     // On mount: try to use the browser's Geolocation API.
     // Effect::new runs once after the first render.
     {
-        let load_aqi = load_aqi.clone();
         Effect::new(move |_| {
             spawn_local(async move {
                 match get_browser_location().await {
@@ -147,7 +146,17 @@ fn App() -> impl IntoView {
     }
 
     view! {
-        <div class=move || if is_light.get() { "app theme-light" } else { "app" }>
+        <div class=move || {
+            let aqi_suffix = match view_state.get() {
+                AppView::Loaded(data) => format!(" app--{}", data.category().css_class()),
+                _ => String::new(),
+            };
+            if is_light.get() {
+                format!("app theme-light{aqi_suffix}")
+            } else {
+                format!("app{aqi_suffix}")
+            }
+        }>
             <header class="header">
                 <div class="header__brand">
                     <img
@@ -175,7 +184,6 @@ fn App() -> impl IntoView {
                         class="btn-locate"
                         title="Use my current location"
                         on:click=move |_| {
-                            let load_aqi = load_aqi.clone();
                             spawn_local(async move {
                                 view_state.set(AppView::Detecting);
                                 match get_browser_location().await {
@@ -247,6 +255,7 @@ fn App() -> impl IntoView {
                     }.into_any(),
 
                     AppView::Loaded(data) => {
+                        let data = *data;
                         let iaqi = data.iaqi.clone();
                         let city_name = data.city.name.clone();
                         let lat = data.city.geo.first().copied().unwrap_or(0.0);
@@ -291,7 +300,6 @@ fn App() -> impl IntoView {
                     },
 
                     AppView::Error(msg) => {
-                        let load_aqi = load_aqi.clone();
                         view! {
                             <div class="status-panel status-panel--error">
                                 <p class="status-panel__icon">"⚠️"</p>
@@ -303,7 +311,6 @@ fn App() -> impl IntoView {
                                     <button
                                         class="btn-retry"
                                         on:click=move |_| {
-                                            let load_aqi = load_aqi.clone();
                                             spawn_local(async move {
                                                 view_state.set(AppView::Detecting);
                                                 match get_browser_location().await {
