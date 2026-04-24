@@ -1,9 +1,26 @@
-/* ---------- AQI Card ---------- */
+/* ---------- AQI Card — Glassmorphism ---------- */
 .aqi-card {
   border-radius: var(--radius);
   padding: 1.75rem;
-  box-shadow: var(--shadow);
-  transition: background var(--transition);
+  /* Glass: override the solid AQI-colour background set by .aqi-good etc. */
+  background: rgba(12, 15, 25, 0.52) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  color: #ffffff !important;
+  transition: box-shadow var(--transition);
+}
+
+.theme-light .aqi-card {
+  background: rgba(255, 255, 255, 0.68) !important;
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  color: var(--text) !important;
 }
 
 .aqi-card__header {
@@ -80,14 +97,20 @@
 }
 
 .aqi-card__section {
-  background: var(--aqi-section-bg);
-  border: 1px solid var(--aqi-section-border);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: var(--radius-sm);
   color: var(--aqi-section-fg);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 1px 3px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(2px);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.theme-light .aqi-card__section {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.65);
 }
 
 .aqi-card__section .aqi-card__category,
@@ -149,29 +172,39 @@
   padding: 0.95rem 0.75rem 0.85rem;
 }
 
-/* The large AQI circle */
+/* The large AQI hero number */
 .aqi-gauge {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 130px;
-  height: 130px;
+  width: 150px;
+  height: 150px;
   flex-shrink: 0;
 }
 
 .aqi-gauge__value {
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: 5rem;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
+/* Colored glow on the hero number — keyed off the app-level AQI class */
+.app--aqi-good         .aqi-gauge__value { text-shadow: 0 0 28px rgba(22,  163,  74, 0.85), 0 0 56px rgba(22,  163,  74, 0.40); }
+.app--aqi-moderate     .aqi-gauge__value { text-shadow: 0 0 28px rgba(202, 138,   4, 0.85), 0 0 56px rgba(202, 138,   4, 0.40); }
+.app--aqi-sensitive    .aqi-gauge__value { text-shadow: 0 0 28px rgba(234,  88,  12, 0.85), 0 0 56px rgba(234,  88,  12, 0.40); }
+.app--aqi-unhealthy    .aqi-gauge__value { text-shadow: 0 0 28px rgba(220,  38,  38, 0.85), 0 0 56px rgba(220,  38,  38, 0.40); }
+.app--aqi-very-unhealthy .aqi-gauge__value { text-shadow: 0 0 28px rgba(124,  58, 237, 0.85), 0 0 56px rgba(124,  58, 237, 0.40); }
+.app--aqi-hazardous    .aqi-gauge__value { text-shadow: 0 0 28px rgba(159,  18,  57, 0.90), 0 0 56px rgba(159,  18,  57, 0.45); }
+
 .aqi-gauge__label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.8;
-  margin-top: 0.2rem;
+  letter-spacing: 0.14em;
+  opacity: 0.65;
+  margin-top: 0.3rem;
+  font-weight: 600;
 }
 
 .aqi-card__info { min-width: 180px; }
@@ -205,8 +238,8 @@
 
 /* ---------- Health advisory ---------- */
 .health-advisory {
-  background: var(--aqi-section-bg);
-  border: 1px solid var(--aqi-section-border);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   color: var(--aqi-section-fg);
   border-radius: var(--radius-sm);
   padding: 1rem 1.25rem;
@@ -215,9 +248,15 @@
   flex-direction: column;
   gap: 0.75rem;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 1px 3px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(2px);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.theme-light .health-advisory {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.65);
 }
 
 .health-advisory__groups-row {

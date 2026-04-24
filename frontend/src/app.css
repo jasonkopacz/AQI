@@ -88,8 +88,86 @@ a:hover { text-decoration: underline; }
   flex-direction: column;
   background: var(--bg);
   color: var(--text);
-  /* Smooth theme transition */
-  transition: background 0.25s ease, color 0.25s ease;
+  transition: background 0.9s ease, color 0.25s ease;
+}
+
+/* ---- Haze: AQI-level gradient backdrops ---- */
+/* Each class is added to .app when data loads — a soft atmospheric glow
+   bleeds in from the upper region, referencing the EPA AQI palette.    */
+
+.app--aqi-good {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(22,  163,  74, 0.26), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(22,  163,  74, 0.09), transparent 65%),
+    #0f1117;
+}
+.app--aqi-moderate {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(202, 138,   4, 0.28), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(202, 138,   4, 0.09), transparent 65%),
+    #0f1117;
+}
+.app--aqi-sensitive {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(234,  88,  12, 0.27), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(234,  88,  12, 0.09), transparent 65%),
+    #0f1117;
+}
+.app--aqi-unhealthy {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(220,  38,  38, 0.28), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(220,  38,  38, 0.10), transparent 65%),
+    #0f1117;
+}
+.app--aqi-very-unhealthy {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(124,  58, 237, 0.28), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(124,  58, 237, 0.10), transparent 65%),
+    #0f1117;
+}
+.app--aqi-hazardous {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(159,  18,  57, 0.34), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(159,  18,  57, 0.13), transparent 65%),
+    #0f1117;
+}
+
+/* Light-mode haze variants — lighter gradients over the warm off-white base */
+.theme-light.app--aqi-good {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(22,  163,  74, 0.13), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(22,  163,  74, 0.05), transparent 65%),
+    #f4f6fb;
+}
+.theme-light.app--aqi-moderate {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(202, 138,   4, 0.14), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(202, 138,   4, 0.05), transparent 65%),
+    #f4f6fb;
+}
+.theme-light.app--aqi-sensitive {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(234,  88,  12, 0.13), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(234,  88,  12, 0.05), transparent 65%),
+    #f4f6fb;
+}
+.theme-light.app--aqi-unhealthy {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(220,  38,  38, 0.13), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(220,  38,  38, 0.05), transparent 65%),
+    #f4f6fb;
+}
+.theme-light.app--aqi-very-unhealthy {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(124,  58, 237, 0.13), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(124,  58, 237, 0.05), transparent 65%),
+    #f4f6fb;
+}
+.theme-light.app--aqi-hazardous {
+  background:
+    radial-gradient(ellipse 90% 55% at 20% 8%,  rgba(159,  18,  57, 0.15), transparent 68%),
+    radial-gradient(ellipse 50% 35% at 82% 88%,  rgba(159,  18,  57, 0.06), transparent 65%),
+    #f4f6fb;
 }
 
 .main {
@@ -102,8 +180,10 @@ a:hover { text-decoration: underline; }
 
 /* ---------- Header ---------- */
 .header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: rgba(15, 17, 23, 0.70);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
@@ -112,7 +192,11 @@ a:hover { text-decoration: underline; }
   position: sticky;
   top: 0;
   z-index: 100;
-  /* backdrop-filter removed — it bled the body background through in light mode */
+}
+
+.theme-light .header {
+  background: rgba(244, 246, 251, 0.78);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .header__brand {
@@ -156,17 +240,23 @@ a:hover { text-decoration: underline; }
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text);
   font-size: 1.1rem;
   cursor: pointer;
   flex-shrink: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: background var(--transition), border-color var(--transition);
 }
 .btn-theme:hover {
   background: var(--accent);
   border-color: var(--accent);
+}
+.theme-light .btn-theme {
+  background: rgba(255, 255, 255, 0.60);
+  border: 1px solid rgba(0, 0, 0, 0.10);
 }
 
 /* ---------- Locate button ---------- */
@@ -175,19 +265,25 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 0.875rem;
   font-family: var(--font);
   cursor: pointer;
   white-space: nowrap;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: background var(--transition), border-color var(--transition);
 }
 .btn-locate:hover {
   background: var(--accent);
   border-color: var(--accent);
+}
+.theme-light .btn-locate {
+  background: rgba(255, 255, 255, 0.60);
+  border: 1px solid rgba(0, 0, 0, 0.10);
 }
 .btn-locate svg {
   width: 16px;
@@ -293,10 +389,21 @@ a:hover { text-decoration: underline; }
 .skel--tile   { height: 90px; border-radius: var(--radius-sm); }
 
 .skeleton-card {
-  background: var(--surface);
   border-radius: var(--radius);
   padding: 1.75rem;
-  box-shadow: var(--shadow);
+  background: rgba(12, 15, 25, 0.52);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.theme-light .skeleton-card {
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
 }
 
 .skeleton-card__header {

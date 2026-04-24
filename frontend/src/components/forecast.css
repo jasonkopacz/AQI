@@ -1,10 +1,25 @@
 /* ---------- Forecast panel ---------- */
 .forecast {
-  background: var(--surface);
   border-radius: var(--radius);
   padding: 1.5rem;
-  box-shadow: var(--shadow);
+  position: relative;
+  z-index: 2;
   overflow: visible;
+  background: rgba(12, 15, 25, 0.52);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.theme-light .forecast {
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.80);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 .forecast__title {
@@ -38,11 +53,25 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  border: 2px solid transparent;
-  transition: transform var(--transition), border-color var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform var(--transition), background var(--transition);
   cursor: default;
 }
-.forecast-card:hover { transform: translateY(-2px); }
+.forecast-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.theme-light .forecast-card {
+  background: rgba(255, 255, 255, 0.50);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+}
+.theme-light .forecast-card:hover {
+  background: rgba(255, 255, 255, 0.70);
+}
 
 .forecast-card-tooltip {
   position: absolute;
