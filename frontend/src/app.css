@@ -88,7 +88,7 @@ a:hover { text-decoration: underline; }
   flex-direction: column;
   background: var(--bg);
   color: var(--text);
-  transition: background 0.9s ease, color 0.25s ease;
+  transition: .15s ease background var(--transition), color var(--transition);
 }
 
 /* ---- Haze: AQI-level gradient backdrops ---- */
