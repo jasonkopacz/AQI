@@ -27,6 +27,11 @@ web-sys = { version = "0.3", features = [
     "Storage",
     "Clipboard",
     "console",
+    "History",
+    "Location",
+    "UrlSearchParams",
+    "HtmlElement",
+    "EventTarget",
 ] }
 
 # Higher-level WASM helpers (setTimeout, spawn_local, etc.)

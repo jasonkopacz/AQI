@@ -1,5 +1,6 @@
 use crate::api::{AqiData, DailyEntry};
 use leptos::prelude::*;
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 
 #[component]
@@ -38,33 +39,45 @@ pub fn AqiCard(
     // without requiring the whole AqiCard to re-render.
     let saved = RwSignal::new(is_saved);
 
-    // Share: copy a formatted summary to the clipboard.
-    let share_label = RwSignal::new("Share");
-    let share_city = data.city.name.clone();
-    let share_aqi = aqi_num;
-    let share_cat = label.clone();
-    let on_share = move |_: web_sys::MouseEvent| {
-        let text = match share_aqi {
-            Some(n) => format!(
-                "AQI in {}: {} ({}) — checked via AQI Global Air Quality",
-                share_city, n, share_cat
-            ),
-            None => format!(
-                "Air quality in {} — checked via AQI Global Air Quality",
-                share_city
-            ),
-        };
-        let clipboard = web_sys::window().map(|w| w.navigator().clipboard());
-        if let Some(cb) = clipboard {
-            let promise = cb.write_text(&text);
-            spawn_local(async move {
-                let _ = wasm_bindgen_futures::JsFuture::from(promise).await;
-                share_label.set("Copied!");
-                gloo_timers::future::TimeoutFuture::new(2000).await;
-                share_label.set("Share");
-            });
-        }
-    };
+    // -----------------------------------------------------------------------
+    // Share dropdown state
+    // -----------------------------------------------------------------------
+    let share_open  = RwSignal::new(false);
+    let copy_label  = RwSignal::new("Copy link");
+
+    let aqi_str     = aqi_num.map(|n| n.to_string()).unwrap_or_else(|| "—".to_string());
+    let share_title = format!("Air Quality in {}: {} ({})", data.city.name, aqi_str, label);
+    let share_body  = format!("Air quality in {}: {} ({}).", data.city.name, aqi_str, label);
+
+    // Percent-encode a string for use inside a mailto: query param.
+    fn pct(s: &str) -> String {
+        s.chars()
+            .flat_map(|c| match c {
+                ' '  => "%20".chars().collect::<Vec<_>>(),
+                '\n' => "%0A".chars().collect(),
+                '&'  => "%26".chars().collect(),
+                '?'  => "%3F".chars().collect(),
+                '#'  => "%23".chars().collect(),
+                '+'  => "%2B".chars().collect(),
+                _    => vec![c],
+            })
+            .collect()
+    }
+
+    let mailto_href = format!(
+        "mailto:?subject={}&body={}",
+        pct(&share_title),
+        pct(&share_body),
+    );
+
+    // Does the browser support navigator.share (Web Share API)?
+    let has_native_share = web_sys::window()
+        .map(|w| {
+            let nav: wasm_bindgen::JsValue = w.navigator().into();
+            js_sys::Reflect::has(&nav, &wasm_bindgen::JsValue::from_str("share"))
+                .unwrap_or(false)
+        })
+        .unwrap_or(false);
 
     view! {
         <div class=format!("aqi-card {css_class}")>
@@ -72,14 +85,33 @@ pub fn AqiCard(
                 <h2 class="aqi-card__city">{data.city.name.clone()}</h2>
                 <div class="aqi-card__header-right">
                     <span class="aqi-card__timestamp">"Updated: " {timestamp}</span>
-                    <button class="btn-share" on:click=on_share>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                            <polyline points="16 6 12 2 8 6"/>
-                            <line x1="12" y1="2" x2="12" y2="15"/>
-                        </svg>
-                        {move || share_label.get()}
-                    </button>
+                    // Share dropdown
+                    <div class="share-wrap">
+                        <button
+                            class=move || if share_open.get() { "btn-share btn-share--open" } else { "btn-share" }
+                            on:click=move |_| share_open.update(|v| *v = !*v)
+                            title="Share"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                                <polyline points="16 6 12 2 8 6"/>
+                                <line x1="12" y1="2" x2="12" y2="15"/>
+                            </svg>
+                            "Share"
+                        </button>
+                        // Reactive wrapper — only captures Copy/Clone values so the
+                        // closure stays Fn (not FnOnce).
+                        {move || share_open.get().then(|| view! {
+                            <ShareMenu
+                                share_open=share_open
+                                copy_label=copy_label
+                                mailto_href=mailto_href.clone()
+                                share_title=share_title.clone()
+                                share_body=share_body.clone()
+                                has_native_share=has_native_share
+                            />
+                        })}
+                    </div>
                     {on_toggle_save.map(|cb| view! {
                         <button
                             class=move || if saved.get() { "btn-save btn-save--saved" } else { "btn-save" }
@@ -352,6 +384,106 @@ fn day_label(date: &str) -> String {
         4 => "Thu".to_string(),
         5 => "Fri".to_string(),
         _ => "Sat".to_string(),
+    }
+}
+
+/// Dropdown share menu rendered when the Share button is active.
+/// Defined as a separate component so its event handlers are set up once
+/// (not inside a reactive closure) which avoids FnOnce capture issues.
+#[component]
+fn ShareMenu(
+    share_open: RwSignal<bool>,
+    copy_label: RwSignal<&'static str>,
+    mailto_href: String,
+    share_title: String,
+    share_body: String,
+    has_native_share: bool,
+) -> impl IntoView {
+    // --- Copy link ---
+    let on_copy_link = move |_: web_sys::MouseEvent| {
+        share_open.set(false);
+        let url = web_sys::window()
+            .and_then(|w| w.location().href().ok())
+            .unwrap_or_default();
+        if let Some(cb) = web_sys::window().map(|w| w.navigator().clipboard()) {
+            let promise = cb.write_text(&url);
+            spawn_local(async move {
+                let _ = wasm_bindgen_futures::JsFuture::from(promise).await;
+                copy_label.set("Copied!");
+                gloo_timers::future::TimeoutFuture::new(2000).await;
+                copy_label.set("Copy link");
+            });
+        }
+    };
+
+    // --- Native share (Web Share API) ---
+    let native_title = share_title.clone();
+    let native_body  = share_body.clone();
+    let on_native_share = move |_: web_sys::MouseEvent| {
+        share_open.set(false);
+        let title = native_title.clone();
+        let text  = native_body.clone();
+        let url   = web_sys::window()
+            .and_then(|w| w.location().href().ok())
+            .unwrap_or_default();
+        spawn_local(async move {
+            if let Some(window) = web_sys::window() {
+                let nav_val: wasm_bindgen::JsValue = window.navigator().into();
+                let data = js_sys::Object::new();
+                let _ = js_sys::Reflect::set(&data, &"title".into(), &wasm_bindgen::JsValue::from_str(&title));
+                let _ = js_sys::Reflect::set(&data, &"text".into(),  &wasm_bindgen::JsValue::from_str(&text));
+                let _ = js_sys::Reflect::set(&data, &"url".into(),   &wasm_bindgen::JsValue::from_str(&url));
+                if let Ok(share_fn) = js_sys::Reflect::get(&nav_val, &"share".into()) {
+                    if let Ok(f) = share_fn.dyn_into::<js_sys::Function>() {
+                        if let Ok(pv) = f.call1(&nav_val, &data) {
+                            if let Ok(p) = pv.dyn_into::<js_sys::Promise>() {
+                                let _ = wasm_bindgen_futures::JsFuture::from(p).await;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    };
+
+    view! {
+        <div class="share-dropdown">
+            // Copy link
+            <button class="share-dropdown__item" on:click=on_copy_link>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                {move || copy_label.get()}
+            </button>
+
+            // Email via mailto:
+            <a
+                class="share-dropdown__item"
+                href=mailto_href
+                on:click=move |_| share_open.set(false)
+            >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                "Email"
+            </a>
+
+            // Native share sheet — only rendered when navigator.share is available
+            {has_native_share.then(|| view! {
+                <button class="share-dropdown__item" on:click=on_native_share>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"/>
+                        <circle cx="6" cy="12" r="3"/>
+                        <circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                    "Share..."
+                </button>
+            })}
+        </div>
     }
 }
 

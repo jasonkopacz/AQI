@@ -39,7 +39,12 @@
   flex-wrap: wrap;
 }
 
-/* Share button on the AQI card */
+/* Share wrapper + dropdown */
+.share-wrap {
+  position: relative;
+  z-index: 10;
+}
+
 .btn-share {
   display: inline-flex;
   align-items: center;
@@ -53,10 +58,65 @@
   font-family: var(--font);
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: background var(--transition), border-color var(--transition);
   white-space: nowrap;
 }
-.btn-share:hover { background: rgba(0,0,0,0.2); }
+.btn-share:hover,
+.btn-share--open { background: rgba(0,0,0,0.2); }
+
+.share-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 155px;
+  background: #0f1623;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.theme-light .share-dropdown {
+  background: #ffffff;
+  border-color: #d1d5db;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.share-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: left;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+.share-dropdown__item:not(:last-child) {
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.share-dropdown__item:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+.theme-light .share-dropdown__item {
+  color: #374151;
+  border-bottom-color: #f3f4f6;
+}
+.theme-light .share-dropdown__item:hover {
+  background: #f9fafb;
+  color: #111827;
+}
 
 /* Save / unsave toggle button on the AQI card */
 .btn-save {

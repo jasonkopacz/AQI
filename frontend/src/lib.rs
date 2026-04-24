@@ -19,6 +19,52 @@ use wasm_bindgen_futures::spawn_local;
 // JS Promise so we can await it cleanly from Rust.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// URL helpers — encode the loaded city into the address bar so users can
+// copy or bookmark the link, and read it back on page load.
+// ---------------------------------------------------------------------------
+
+/// Reads `?lat=X&lng=Y` from the current URL.  Returns `None` if absent or
+/// if either value cannot be parsed as a float.
+fn parse_url_coords() -> Option<(f64, f64)> {
+    let window = web_sys::window()?;
+    let search = window.location().search().ok()?;
+    let search = search.trim_start_matches('?');
+    if search.is_empty() {
+        return None;
+    }
+    let params = web_sys::UrlSearchParams::new_with_str(search).ok()?;
+    let lat = params.get("lat")?.parse::<f64>().ok()?;
+    let lng = params.get("lng")?.parse::<f64>().ok()?;
+    Some((lat, lng))
+}
+
+/// Pushes `?lat=…&lng=…&city=…` into the browser history without reloading.
+pub fn push_url_state(lat: f64, lng: f64, city: &str) {
+    // Basic percent-encoding for characters that break URL params.
+    let encoded: String = city
+        .chars()
+        .flat_map(|c| match c {
+            ' ' => vec!['%', '2', '0'],
+            '&' => vec!['%', '2', '6'],
+            '#' => vec!['%', '2', '3'],
+            '?' => vec!['%', '3', 'F'],
+            '+' => vec!['%', '2', 'B'],
+            c => vec![c],
+        })
+        .collect();
+    let url = format!("?lat={:.4}&lng={:.4}&city={}", lat, lng, encoded);
+    if let Some(window) = web_sys::window() {
+        if let Ok(history) = window.history() {
+            let _ = history.push_state_with_url(
+                &wasm_bindgen::JsValue::NULL,
+                "",
+                Some(&url),
+            );
+        }
+    }
+}
+
 async fn get_browser_location() -> Result<(f64, f64), String> {
     use js_sys::Promise;
     use wasm_bindgen::JsCast;
@@ -118,6 +164,7 @@ fn App() -> impl IntoView {
         spawn_local(async move {
             match fetch_aqi_by_geo(lat, lng).await {
                 Ok(data) if request_version.get_untracked() == current_request => {
+                    push_url_state(lat, lng, &data.city.name);
                     view_state.set(AppView::Loaded(Box::new(data)));
                 }
                 Err(e) if request_version.get_untracked() == current_request => {
@@ -129,10 +176,16 @@ fn App() -> impl IntoView {
         });
     };
 
-    // On mount: try to use the browser's Geolocation API.
+    // On mount: check URL params first, then fall back to Geolocation API.
     // Effect::new runs once after the first render.
     {
         Effect::new(move |_| {
+            // If the page URL already has ?lat=…&lng=… (e.g. shared link), load
+            // that location directly without asking for browser geolocation.
+            if let Some((lat, lng)) = parse_url_coords() {
+                load_aqi(lat, lng);
+                return;
+            }
             spawn_local(async move {
                 match get_browser_location().await {
                     Ok((lat, lng)) => load_aqi(lat, lng),
