@@ -1,4 +1,5 @@
 # AQI — Global Air Quality
+Live at <https://jasonkopacz.github.io/AQI/>
 
 A full-stack web application for viewing real-time air quality anywhere in the world. Built entirely in Rust — backend, frontend, and everything in between.
 
