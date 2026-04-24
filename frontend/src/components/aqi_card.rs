@@ -49,21 +49,6 @@ pub fn AqiCard(
     let share_title = format!("Air Quality in {}: {} ({})", data.city.name, aqi_str, label);
     let share_body  = format!("Air quality in {}: {} ({}).", data.city.name, aqi_str, label);
 
-    // Percent-encode a string for use inside a mailto: query param.
-    fn pct(s: &str) -> String {
-        s.chars()
-            .flat_map(|c| match c {
-                ' '  => "%20".chars().collect::<Vec<_>>(),
-                '\n' => "%0A".chars().collect(),
-                '&'  => "%26".chars().collect(),
-                '?'  => "%3F".chars().collect(),
-                '#'  => "%23".chars().collect(),
-                '+'  => "%2B".chars().collect(),
-                _    => vec![c],
-            })
-            .collect()
-    }
-
     let mailto_href = format!(
         "mailto:?subject={}&body={}",
         pct(&share_title),
@@ -485,6 +470,25 @@ fn ShareMenu(
             })}
         </div>
     }
+}
+
+/// Percent-encode a string for use inside a `mailto:` query parameter.
+/// Only encodes characters that are meaningful inside URLs / query strings;
+/// non-ASCII letters (e.g. accented city names) are left as-is.
+pub(crate) fn pct(s: &str) -> String {
+    s.chars()
+        .flat_map(|c| match c {
+            ' '  => "%20".chars().collect::<Vec<_>>(),
+            '\n' => "%0A".chars().collect(),
+            '\r' => "%0D".chars().collect(),
+            '&'  => "%26".chars().collect(),
+            '?'  => "%3F".chars().collect(),
+            '#'  => "%23".chars().collect(),
+            '+'  => "%2B".chars().collect(),
+            '"'  => "%22".chars().collect(),
+            _    => vec![c],
+        })
+        .collect()
 }
 
 fn prettify_pollutant(raw: &str) -> &str {

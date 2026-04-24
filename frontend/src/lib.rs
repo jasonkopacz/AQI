@@ -24,36 +24,57 @@ use wasm_bindgen_futures::spawn_local;
 // copy or bookmark the link, and read it back on page load.
 // ---------------------------------------------------------------------------
 
+/// Parse `lat` and `lng` from a raw query string (without the leading `?`).
+/// Pure-Rust so it can be unit-tested without a browser environment.
+pub(crate) fn parse_query_coords(query: &str) -> Option<(f64, f64)> {
+    let query = query.trim_start_matches('?');
+    if query.is_empty() {
+        return None;
+    }
+    let mut lat: Option<f64> = None;
+    let mut lng: Option<f64> = None;
+    for pair in query.split('&') {
+        let mut kv = pair.splitn(2, '=');
+        let key = kv.next().unwrap_or("");
+        let val = kv.next().unwrap_or("");
+        match key {
+            "lat" => lat = val.parse::<f64>().ok(),
+            "lng" => lng = val.parse::<f64>().ok(),
+            _ => {}
+        }
+    }
+    Some((lat?, lng?))
+}
+
+/// Build the `?lat=…&lng=…&city=…` query string used for shareable URLs.
+/// Pure-Rust so it can be unit-tested without a browser environment.
+pub(crate) fn build_share_url(lat: f64, lng: f64, city: &str) -> String {
+    // Percent-encode characters that would break URL param parsing.
+    let encoded: String = city
+        .chars()
+        .flat_map(|c| match c {
+            ' ' => "%20".chars().collect::<Vec<_>>(),
+            '&' => "%26".chars().collect(),
+            '#' => "%23".chars().collect(),
+            '?' => "%3F".chars().collect(),
+            '+' => "%2B".chars().collect(),
+            c   => vec![c],
+        })
+        .collect();
+    format!("?lat={:.4}&lng={:.4}&city={}", lat, lng, encoded)
+}
+
 /// Reads `?lat=X&lng=Y` from the current URL.  Returns `None` if absent or
 /// if either value cannot be parsed as a float.
 fn parse_url_coords() -> Option<(f64, f64)> {
     let window = web_sys::window()?;
     let search = window.location().search().ok()?;
-    let search = search.trim_start_matches('?');
-    if search.is_empty() {
-        return None;
-    }
-    let params = web_sys::UrlSearchParams::new_with_str(search).ok()?;
-    let lat = params.get("lat")?.parse::<f64>().ok()?;
-    let lng = params.get("lng")?.parse::<f64>().ok()?;
-    Some((lat, lng))
+    parse_query_coords(&search)
 }
 
 /// Pushes `?lat=…&lng=…&city=…` into the browser history without reloading.
 pub fn push_url_state(lat: f64, lng: f64, city: &str) {
-    // Basic percent-encoding for characters that break URL params.
-    let encoded: String = city
-        .chars()
-        .flat_map(|c| match c {
-            ' ' => vec!['%', '2', '0'],
-            '&' => vec!['%', '2', '6'],
-            '#' => vec!['%', '2', '3'],
-            '?' => vec!['%', '3', 'F'],
-            '+' => vec!['%', '2', 'B'],
-            c => vec![c],
-        })
-        .collect();
-    let url = format!("?lat={:.4}&lng={:.4}&city={}", lat, lng, encoded);
+    let url = build_share_url(lat, lng, city);
     if let Some(window) = web_sys::window() {
         if let Ok(history) = window.history() {
             let _ = history.push_state_with_url(
